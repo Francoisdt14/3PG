@@ -1,0 +1,37 @@
+### Scripts for workflow in R ###
+
+# 1 # ---------------------------------
+
+# Crop study area to different rasters 
+# NAME OF SCRIPT
+# LOCATION
+# List of all input rasters ?
+
+# 2 # ---------------------------------
+
+# Create Climate rasters
+# Name: make_climateNA.r
+# Location: 
+
+# 3 # ---------------------------------
+
+# Mask these base rasters to forested area
+# Name: 
+# Location: 
+# Currently part of the r3PG_DataPretp5 (line 10-25) - move to standalone!
+
+# 4 # ---------------------------------
+
+# Align and re-crop the rasters so that they can be used together 
+# Name: alight_crop_function
+
+# 5 # ---------------------------------
+
+# Tile rasters - the large rasters are too big and crash computer .. need to tile rasters into smaller chunks
+# Name: tile_raster.r
+# Location
+
+# 6 # ---------------------------------
+
+# Run tile through the r3PG package with data prepared correctly 
+# Split into data prep and actual function!!!

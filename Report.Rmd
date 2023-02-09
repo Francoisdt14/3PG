@@ -1,0 +1,23 @@
+---
+title: "<PROJECT_NAME>"
+author: Tristan Goodbody
+date: '`r format(Sys.Date())`'
+bibliography: lit.bib
+output:
+  rmdformats::robobook:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("R/funs.R")
+```
+
+# Directory structure
+```{r, echo = F, tree}
+tree(".")
+```
