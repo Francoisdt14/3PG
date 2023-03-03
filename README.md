@@ -1,6 +1,6 @@
-# Test
+# 3PG Repository
 
-testing
+Initial scripts
 
 Started on 2023-02-08.
 
@@ -15,8 +15,8 @@ Started on 2023-02-08.
 * **Report.rmd** - Project reporting
 
 
-# `.gitignore`
-_Ensure that you change the `.gitignore` file so that `admin/docs/data` are not uploaded to github_
+## `.gitignore`
+_Ensure that you change the `.gitignore` file so that unwanted files are not uploaded to github (e.g. `admin/docs/data`) _
 
 ```
 
