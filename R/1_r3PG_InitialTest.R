@@ -1,6 +1,8 @@
 # r3PG Test Script - testing out r3PG with default parameters and functions
 # Get an idea of what is needed for first run of 3PG
+# Only using internal data from the r3PG package (https://github.com/trotsiuk/r3PG)
 
+# Load libraries
 library(tidyverse)
 library(r3PG)
 library(dplyr)

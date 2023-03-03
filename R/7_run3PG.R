@@ -1,5 +1,4 @@
-# Data Preparation
-# Prepare datasets required by r3PG for each tile:
+# Datasets required by r3PG for each tile:
 #   site
 #   species
 #   climate
@@ -12,20 +11,29 @@ source("R/lib.R")
 # Read in the two main data sources - climate data, and remaining inputs
 
 # climate includes: Frost, precipitation, temps, radiation
-# inputs are the remaining inputs required by 3PG that are rasterized: DEM, disturbance date, and species.
+# Inputs are the remaining inputs required by 3PG that are rasterized: DEM, disturbance date, and species.
 # the inputs dataframe was created in 5_tile_raster and just happens to be the non-climate data that was processed at the same time
 
-climate_df <- read.csv("D:/BP_Layers/outputs/crops/climate/033.csv") %>% na.omit()
-inputs_df <- read.csv("D:/BP_Layers/outputs/crops/inputs/033.csv") %>% na.omit()
+# You should have access to these pre-prepared rds files
 
-###  UPDATE LAT FOR EACH RASTER!!! - currently only using one box so this is okay
+
+# Use .rds because it saves space
+climate_df <- readRDS("./data/input/climate_033.rds") %>% na.omit()
+inputs_df <- readRDS("./data/input/inputs_033.rds") %>% na.omit()
+
+#csvs are too large for github
+
+#climate_df <- read.csv("./data/input/climate_033.csv") %>% na.omit()
+#inputs_df <- read.csv("./data/input/inputs_033.csv") %>% na.omit()
+
 
 # Currently running a loop but will work towards improving this
-
 # Initialize an empty data table to store values for each cropped area
 
-#for example now... it is just NPP
+# for example now: NPP, leaf area index (lai), and dbh (diameter at breast height)
 npp.df <- data.table()
+lai.df <- data.table()
+dbh.df <- data.table()
 
 tic('total')
 for(i in 1:nrow(climate_df)) {
@@ -39,7 +47,7 @@ for(i in 1:nrow(climate_df)) {
 
     days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
-    first_row_data <- climate_df2[i,]
+    first_row_data <- climate_df[i,]
 
     # Select the appropriate columns and rearrange for the correct input:
     first_row_select <- first_row_data %>% #select(Tmax01:PPT12, NFFD01:NFFD12) %>%
@@ -62,10 +70,10 @@ for(i in 1:nrow(climate_df)) {
 
         #site <- first_row_data %>% select(c('Latitude', 'Elevation')) %>% rename(latitude = Latitude, altitude = Elevation)
 
-    site <- inputs_df2[i,]
+    site <- inputs_df[i,]
     site <- site %>% select(c('dem_crop_M_9S')) %>% rename(altitude = dem_crop_M_9S)
 
-    site$latitude <- lat # this is currently created in 6_Latitude, but can be done for each pixel
+    site$latitude <- 57.08537 # this is currently created in 6_Latitude, but can be done for each pixel
 
     site$soil_class <- 3 # Site factors will include data from other rasters
     site$asw_i <-999 #
@@ -114,7 +122,7 @@ for(i in 1:nrow(climate_df)) {
     # need parameters for every species
 
     # Currently using customized parameters (but can use parameters directly from the vignette)
-    f_loc <- 'D:/r3PG/vignette_data/data.input2.xlsx'
+    f_loc <- './data/input/data.input2.xlsx'
     parameters <-  read_xlsx(f_loc, 'parameters')
 
     ############################################################
@@ -159,10 +167,3 @@ for(i in 1:nrow(climate_df)) {
 toc()
 
 ####################
-# append npp.df to an empty raster?
-
-npp.df.033 <- npp.df
-
-colnames(npp.df.033)[1]  <- "NPP"    # change column name for x column
-
-write.csv(npp.df.033, "D:/BP_Layers/outputs/crops/npp/npp_033.csv")

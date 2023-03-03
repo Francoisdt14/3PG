@@ -1,4 +1,6 @@
-# Create a Mask to keep only forested areas in our datasets!
+# Create a mask to keep only forested areas in our datasets!
+# This raster is important because it will be the reference for all the rasters later on
+
 
 library(tidyverse); library(terra); library(data.table); library(silvR21); library(parallel); library(pbapply); library(arrow); library(readxl)
 

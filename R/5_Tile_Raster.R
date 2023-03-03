@@ -93,19 +93,6 @@ for (i in 32:34) {         #nrow(boxes.v)) {
 }
 
 
-
-############################################################
-
-
-
-##########
-
-
-climate_df <- values_df
-inputs_df <- values_df
-
 # then you have a folder full of smaller tiles that are just the mask values
-
-
-
 ############################################################
+

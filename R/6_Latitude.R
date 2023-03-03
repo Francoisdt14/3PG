@@ -5,8 +5,9 @@ source("R/lib.R")
 # polygon information comes from 5_Tile_Raster
 
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
-
 polygon <- boxes.v[i, ]
+
+#mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 lat.mask = crop(mask_crop, polygon)
 
 # For the center of the entire raster (box):

@@ -2,6 +2,12 @@
 
 source("R/lib.R")
 
+# Rasters that currently need to be aligned and re-cropped:
+#   climate rasters
+#   DEM (elevation)
+#   Species raster (eventually used for different species inputs)
+#   Disturbance (stand initiation)
+
 # List of the input rasters that we are masking and aligning
 
 fl = list.files("D:/BP_Layers/M_9S/climate/tmax", full.names = T, pattern = ".tif$")
