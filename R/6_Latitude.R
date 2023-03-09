@@ -29,12 +29,29 @@ lat <- center_spatial_lat[1,2]
 # lat is then used in the next script.. right now it is a placeholder and needs to be integrated correctly per pixel!
 
 ########################################################################################################################
-
+# TODO fix this bogusness
 # Latitude from each cell found below:
 # For each cell in the raster
 lat_long <- project(lat.mask, "+proj=longlat +datum=WGS84")
+
 # Extract y coordinate of each cell center
-y_coordinate <- yFromRow(lat_long, 1:nrow(lat_long))
+y_coordinate <- yFromCell(lat_long, 1:ncell(lat_long))
+
+# TUrn y coords into a raster
+y.rast = lat_long
+values(y.rast) <- y_coordinate %>% round(4)
+
+# remove non-forested pixels
+y.rast = project(y.rast, crs(lat.mask)) %>%
+         resample(., lat.mask, "bilinear") %>%
+         focal(w = 5, fun = "mean", na.policy = "only", na.rm = T) %>%
+         mask(lat.mask)
+
+global(y.rast, "notNA")
+global(lat.mask, "notNA")
+
+plot(y.rast)
+
 # Save as dataframe
 df_y_coordinate <- data.frame(y_coordinate)
 

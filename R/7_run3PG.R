@@ -35,9 +35,9 @@ npp.df <- data.table()
 lai.df <- data.table()
 dbh.df <- data.table()
 
-tic('total')
-for(i in 1:nrow(climate_df)) {
-
+tic('total');
+#for(i in 1:nrow(climate_df)) {
+for(i in 1:20) {
     #nrow(climate_df)){
 
     ##########################################################
@@ -163,7 +163,41 @@ for(i in 1:nrow(climate_df)) {
     dbh_select <- out_3PG[out_3PG$date == '2020-12-31' & out_3PG$variable == 'dbh', 5]
     dbh.df <- rbind(dbh.df, dbh_select)
 
-}
-toc()
+}; toc()
+
+###############################################################################################################
+## Let's parallelize this ##
+
+# Option 1 -
+apply # through each row of the table
+pbapply::pbapply()
+
+
+# Option 2 -
+lapply # through 1:nrow(big.table)
+pbappy::pblapply(cl = cl)
+
+
+# set up parallel cluster
+library(parallel)
+# cl = detectCores()/2 %>% makeCluster()
+cl = makeCluster(5) # number of cores
+clusterEvalQ(cl, {library(r3PG); library(dplyr); var.x = 5})  # source also works
+clusterExport(cl, varlist = c("climate_df", "inputs_df"))
+
+output.list = pbappy::pblapply(1:nrow(big.table), FUN = function(i){ # YOUR FUNCTION HERE
+    return(current.row) # Return a row instead of r-binding to a current thing
+}, cl = cl) %>%
+    rbindlist() # bind all elements in list
+
+
+stopCluster(cl)
+
+
+
+
+
+
+
 
 ####################
