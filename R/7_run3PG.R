@@ -30,13 +30,33 @@ inputs_df <- readRDS("./data/input/inputs_033.rds") %>% na.omit()
 # Currently running a loop but will work towards improving this
 # Initialize an empty data table to store values for each cropped area
 
-# for example now: NPP, leaf area index (lai), and dbh (diameter at breast height)
+Calculate_3PG <- function(climate_df, input_df) {
+
+# create an empty dataframe to store results
+#result_df <- data.frame(new_value = numeric((nrow(climate_df))))
+
+# THIS IS FASTER - allocate the size of the dataframe ahead of time
+
+
+result_df <- data.frame(dbh = numeric(20))
+
+
+# for example now: NPP, leaf area index (lai), and dbh (diameter at breast height) - this is slower
 npp.df <- data.table()
 lai.df <- data.table()
 dbh.df <- data.table()
 
-tic('total');
 #for(i in 1:nrow(climate_df)) {
+
+# parameters
+# need parameters for every species
+
+# We can pull the parameters data out
+# Currently using customized parameters (but can use parameters directly from the vignette)
+f_loc <- './data/input/data.input2.xlsx'
+parameters <-  read_xlsx(f_loc, 'parameters')
+
+
 for(i in 1:20) {
     #nrow(climate_df)){
 
@@ -118,12 +138,6 @@ for(i in 1:20) {
     # d_sizedist - currently unused
 
     ##########################################################
-    # parameters
-    # need parameters for every species
-
-    # Currently using customized parameters (but can use parameters directly from the vignette)
-    f_loc <- './data/input/data.input2.xlsx'
-    parameters <-  read_xlsx(f_loc, 'parameters')
 
     ############################################################
     ############################################################
@@ -163,7 +177,13 @@ for(i in 1:20) {
     dbh_select <- out_3PG[out_3PG$date == '2020-12-31' & out_3PG$variable == 'dbh', 5]
     dbh.df <- rbind(dbh.df, dbh_select)
 
-}; toc()
+    result_df[i, "dbh"] <- dbh_select
+
+}
+return(result_df)
+}
+
+
 
 ###############################################################################################################
 ## Let's parallelize this ##
@@ -171,6 +191,7 @@ for(i in 1:20) {
 # Option 1 -
 apply # through each row of the table
 pbapply::pbapply()
+
 
 
 # Option 2 -
@@ -182,10 +203,14 @@ pbappy::pblapply(cl = cl)
 library(parallel)
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(5) # number of cores
-clusterEvalQ(cl, {library(r3PG); library(dplyr); var.x = 5})  # source also works
+clusterEvalQ(cl, {library(r3PG); library(dplyr); library(readxl); var.x = 5})  # source also works
 clusterExport(cl, varlist = c("climate_df", "inputs_df"))
 
-output.list = pbappy::pblapply(1:nrow(big.table), FUN = function(i){ # YOUR FUNCTION HERE
+output.list = pbapply::pblapply(1:nrow(big.table), FUN = function(i){
+
+
+
+    # YOUR FUNCTION HERE
     return(current.row) # Return a row instead of r-binding to a current thing
 }, cl = cl) %>%
     rbindlist() # bind all elements in list
@@ -194,10 +219,29 @@ output.list = pbappy::pblapply(1:nrow(big.table), FUN = function(i){ # YOUR FUNC
 stopCluster(cl)
 
 
-
-
-
-
-
-
 ####################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
