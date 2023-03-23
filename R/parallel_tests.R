@@ -12,8 +12,8 @@ source("R/lib.R")
 
 # subset data from 7...
 
-climate_df2 <- climate_df[1:500,]
-inputs_df2 <- inputs_df[1:500,]
+climate_df2 <- climate_df[1:10000,]
+inputs_df2 <- inputs_df[1:10000,]
 
 # Here is the current function...
 # This is the same function as what is stored in 'test_fun.R'
@@ -117,8 +117,9 @@ Calculate_3PG_TEST <- function(climate_df, input_df) {
 
 tic(); test_3PG <- Calculate_3PG_TEST(climate_df2, inputs_df2); toc()
 
-# It takes 39ish seconds to run 500 rows.
-
+# It takes 39ish seconds to run 500 rows (pixels)
+# It takes 82 seconds for 1000 rows (pixels)
+# It takes 13.25 mins (795s) for 10 000 rows
 ################################################################################
 ################################################################################
 
@@ -616,14 +617,17 @@ stopCluster(cl)
 #############################################################
 
 
-
-
+####################
+# THIS IS THE ONE TO USE!!!
+####################
+# 10 000 rows from 13.25 mins (loop) to 1.3 mins (parallel)
+#
 
 #################################################################################
 Calculate_3PG_Y <- function(climate_df, inputs_df, cl = NA) {
     # Currently using customized parameters (but can use parameters directly from the vignette)
 
-    test_df = pblapply(cl = cl, 1:7000, FUN = function(i){
+    test_df = pblapply(cl = cl, 1:10000, FUN = function(i){
         ##########################################################
         # CLIMATE #
         # d_climate requires: month, tmp_min, tmp_max, tmp_ave,  prcp,  srad, frost_days
@@ -714,3 +718,6 @@ result <- Calculate_3PG_Y(climate_df, inputs_df, cl = cl)
 
 result_df <- bind_rows(result)
 stopCluster(cl)
+
+# 9ish seconds for 1000 rows (20 cores)
+# 1:19 for 10 000 rows (20 cores)
