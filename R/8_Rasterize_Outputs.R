@@ -3,16 +3,15 @@
 
 source("R/lib.R")
 
-lai.df.033 <- lai.df
-colnames(lai.df.033)[1]  <- "LAI"    # change column name for x column
-
+dbh.df.044 <- result_df
+#colnames(lai.df.033)[1]  <- "LAI"    # change column name for x column
 
 ## making a large raster
 
 # mask_crop = rast("D:/BP_Layers/outputs/tree_mask.tif")
-# i = number of box we are on (33 here)
+# k = number of box we are on (44 here)
 
-polygon <- boxes.v[i, ]
+polygon <- boxes.v[k, ]
 r <-  crop(mask_crop, polygon)
 
 n.pix = global(r, "notNA") %>% as.numeric()
@@ -29,8 +28,9 @@ plot(r.id)
 # How many valid pixels?
 num.valid = global(r.id, "notNA") %>% as.numeric()
 
+
 # Read in output (NPP or whatever) -> change this to the relevant output
-vals = lai.df.034 %>% pull("LAI")
+vals = dbh.df.044 %>% pull("dbh")
 
 # This should be true
 length(vals) == num.valid
@@ -38,8 +38,8 @@ length(vals) == num.valid
 # Fill in the blank raster with the output pixels
 r[!is.na(r)] <- vals
 
-lai.df.033.rast <- r
+dbh.df.044.rast <- r
 
 #writeRaster(lai.rast, "...crops/lai_034.tif")
 
-plot(lai.df.034.rast)
+plot(dbh.df.044.rast)

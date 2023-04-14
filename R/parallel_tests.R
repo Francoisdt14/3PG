@@ -621,20 +621,20 @@ stopCluster(cl)
 # THIS IS THE ONE TO USE!!!
 ####################
 # 10 000 rows from 13.25 mins (loop) to 1.3 mins (parallel)
-#
+# 50 000 rows ->
 
 #################################################################################
-Calculate_3PG_Y <- function(climate_df, inputs_df, cl = NA) {
+Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
     # Currently using customized parameters (but can use parameters directly from the vignette)
 
-    test_df = pblapply(cl = cl, 1:10000, FUN = function(i){
+    test_df = pblapply(cl = cl, 1:nrow(climate.df), FUN = function(i){
         ##########################################################
         # CLIMATE #
         # d_climate requires: month, tmp_min, tmp_max, tmp_ave,  prcp,  srad, frost_days
         # all available from climateNA data
 
         days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-        first_row_data <- climate_df[i,]
+        first_row_data <- climate.df[i,]
 
         #Select the appropriate columns and rearrange for the correct input:
         first_row_select <- first_row_data %>% #select(Tmax01:PPT12, NFFD01:NFFD12) %>%
@@ -649,7 +649,7 @@ Calculate_3PG_Y <- function(climate_df, inputs_df, cl = NA) {
         # SITE data
         #site <- first_row_data %>% select(c('Latitude', 'Elevation')) %>% rename(latitude = Latitude, altitude = Elevation)
 
-        site <- inputs_df[i,]
+        site <- inputs.df[i,]
         site <- site %>% select(c('dem_crop_M_9S')) %>% rename(altitude = dem_crop_M_9S)
 
         site$latitude <- 57.08537 # this is currently created in 6_Latitude, but can be done for each pixel
@@ -709,6 +709,7 @@ Calculate_3PG_Y <- function(climate_df, inputs_df, cl = NA) {
 
     return(test_df)
 }
+
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
 clusterEvalQ(cl, {library(r3PG); library(dplyr); library(readxl); library(data.table); library(tidyr); library(tidyverse)})  # source also works

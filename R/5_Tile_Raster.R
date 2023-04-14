@@ -37,6 +37,8 @@ boxes.v = vect(boxes)
 
 #writeVector(boxes.v, "D:/BP_Layers/outputs/boxes.shp")
 
+boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+
 #plot it to see what it looks like
 plot(mask_crop, ext = ext(boxes.v), col = "red")
 plot(boxes.v, add = T)
@@ -46,7 +48,9 @@ text(boxes.v, boxes.v$name)
 # have a loop where you go through each box and output a cropped raster from mask_crop
 # Set file path for the folder containing the input rasters
 
-folder_path <- "D:/BP_Layers/outputs/inputs"
+#folder_path <- "D:/BP_Layers/outputs/inputs"
+folder_path <- "D:/BP_Layers/outputs/climate"
+#folder_path <- "D:/Radiation/30m_crop_align/M_nineS"
 
 # vector polygons used for cropping = boxes.v from above!
 
@@ -54,7 +58,7 @@ folder_path <- "D:/BP_Layers/outputs/inputs"
 raster_files <- list.files(folder_path, pattern = "*.tif$")
 
 # Loop through the vector polygons and crop the rasters - here we are cropping just boxes 32:34...
-for (i in 32:34) {         #nrow(boxes.v)) {
+for (i in 44:46) {         #nrow(boxes.v)) {
   polygon <- boxes.v[i, ]
 
   # Initialize an empty data table to store values for each cropped area
@@ -88,7 +92,7 @@ for (i in 32:34) {         #nrow(boxes.v)) {
   }
 
   # Save the data table as a .csv file
-  write.csv(values_df, paste0("D:/BP_Layers/outputs/crops/inputs/", polygon$name, ".csv"), row.names = FALSE)
+  write.csv(values_df, paste0("D:/BP_Layers/outputs/crops/climate/", polygon$name, ".csv"), row.names = FALSE)
   rm(values_df)
 }
 
