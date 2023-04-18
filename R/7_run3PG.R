@@ -212,7 +212,7 @@ for(i in 1:20) {
     npp_sum <- sum(npp_select$value)
     npp.df <- rbind(npp.df, npp_sum)
 
-    # for LAI and other variables we only want the last value of the growing period!
+    # for LAI and other variables we only want the last value of the growing period?
     lai_select <- out_3PG[out_3PG$date == '2020-12-31' & out_3PG$variable == 'lai', 5]
     lai.df <- rbind(lai.df, lai_select)
 
@@ -303,11 +303,15 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
         #species$species <- 'White Spruce' # should come from species raster - need to figure out how to do this...
 
         if (inputs.df[i,5] == 3) {
-            species$species <- "White Spruce"
+            species$species <- "Black Spruce" # should be sub-alpine fir
         } else if (inputs.df[i,5] == 23) {
-            species$species <-"Pinus contorta"
+            species$species <-"Lodgepole Pine"
+        } else if (inputs.df[i,5] == 18) {
+            species$species <-"Black Spruce"
+        } else if (inputs.df[i,5] == 29) {
+            species$species <-"Black Spruce" # this should be trembling aspen
         } else {
-            species$species <-"P. radiata"
+            species$species <-"Blank Tree" # these are inconsequential species
         }
 
 
@@ -333,8 +337,16 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
             check_input = TRUE, df_out = TRUE)
 
         dbh_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'dbh', 5]
+        lai_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'lai', 5]
+        #npp_select <- filter(out_3PG, variable == "npp")
+       # npp_sum <- sum(npp_select$value)
+        out_3PG$year <- lubridate::year(out_3PG$date)
+        # filter the data for the final year and the 'npp' variable
+        final_year_npp <- out_3PG %>% filter(year == 1935 & variable == "npp")
+        # then, use the 'sum' function to add up all of the npp values for the final year
+        total_npp <- sum(final_year_npp$value)
 
-        return(data.frame("dbh" = dbh_select))
+        return(data.frame("dbh" = dbh_select, "lai" = lai_select, "npp" = total_npp))
     }) %>% bind_rows()
 
     return(test_df)
@@ -342,7 +354,7 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
 
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
-clusterEvalQ(cl, {library(r3PG); library(dplyr); library(readxl); library(data.table); library(tidyr); library(tidyverse)})  # source also works
+clusterEvalQ(cl, {library(r3PG); library(dplyr); library(readxl); library(data.table); library(tidyr); library(tidyverse); library(lubridate)})  # source also works
 clusterExport(cl, varlist = c("climate_df2", "full_comb_clean", "f_loc", "parameters"))
 
 
@@ -355,5 +367,4 @@ stopCluster(cl)
 # 1:19 for 10 000 rows (20 cores)
 
 ###############################################################################################################
-
-
+test.df <- out_3PG[out_3PG$date == '2019-12-31', ]

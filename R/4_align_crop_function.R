@@ -59,22 +59,36 @@ global(rast_m, "notNA")
 # Original loop before writing as a function...
 # Initially manually did DEM, Species, and Disturbance rasters using this loop:
 
+fl <- ("D:/BP_Layers/M_9S/species/leading-species_2019.dat")
+
+#### CHECK THIS AND ADJUST FOR SPECIES CODE - SOLUTION SEEMS TO BE AS FACTOR
+# PRE-PROJECTION!
+
 for (i in 1:length(fl)) {
 
-    rast <- rast(fl[i]) %>% project("EPSG:32609")
+    rast <- rast(fl[i])
+    rast <- as.factor(rast)
+    # try this ---
+    rast_p <- rast %>% project("EPSG:32609")
+
     #rast_a <- align_raster(iraster = rast, rtemplate = mask_crop)
-    rast_a <- resample(rast, mask_crop, method = "near")
+    rast_a <- resample(rast_p, mask_crop, method = "near")
 
-    rast_a = focal(rast_a, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+    #rast_b <- resample(rast, mask_crop, method = "near")
 
-    rast_m <- terra::crop(rast_a, mask_crop)
+    # get rid of this because of CATEGORICAL nature of the species raster?
+    rast_b = focal(rast_a, w = 3, fun = "modal", na.policy = "only", na.rm = T, expand = T)
+
+    # here now ------
+    rast_m <- terra::crop(rast_b, mask_crop)
     rast_m <- terra::mask(rast_m, mask_crop)
 
     file.name <- basename(fl[i])
     file.name <- gsub('.tif','',file.name)
 
-    #writeRaster(rast_m, "D:/BP_Layers/outputs/dem_crop_M_9S_test.tif")
-    writeRaster(rast_m, paste("D:/BP_Layers/outputs/climate_2/", file.name, ".tif", sep = ""), overwrite = T)
+    writeRaster(rast_m, "D:/BP_Layers/outputs/inputs/leading-species_2019_2.tif")
+
+    #writeRaster(rast_m, paste("D:/BP_Layers/outputs/climate_2/", file.name, ".tif", sep = ""), overwrite = T)
 
 }
 
