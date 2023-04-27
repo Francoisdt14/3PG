@@ -6,6 +6,7 @@ source("R/lib.R")
 
 # i = 44 to 46...
 
+mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 polygon <- boxes.v[i, ]
 
@@ -38,6 +39,59 @@ lat <- center_spatial_lat[1,2]
 #### just set lat.mask to mask_crop and do the whole thing?
 #lat.mask <-
 
+boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+# Change this to check if the things are writing to the correct place
+target_folder <- "D:/BP_Layers/outputs/crops/lat"
+
+box.numb <- c(512:523, 543:554)
+
+for (i in box.numb) {         #nrow(boxes.v)) {
+
+    polygon <- boxes.v[i, ]
+
+    filename <- paste0(polygon$name, ".csv")
+    filepath <- file.path(target_folder, filename)
+
+    if (file.exists(filepath)) {
+        cat("Skipping file", filename, "because it already exists.\n")
+        next  # move to next iteration of the loop
+    }
+
+    #mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
+    lat.mask = crop(mask_crop, polygon)
+
+    lat_long <- project(lat.mask, "+proj=longlat +datum=WGS84")
+
+    # Extract y coordinate of each cell center
+    y_coordinate <- yFromCell(lat_long, 1:ncell(lat_long))
+
+    # TUrn y coords into a raster
+    y.rast = lat_long
+    values(y.rast) <- y_coordinate %>% round(4)
+
+    # remove non-forested pixels
+    y.rast = project(y.rast, crs(lat.mask)) %>%
+        resample(., lat.mask, "bilinear") %>%
+        focal(w = 5, fun = "mean", na.policy = "only", na.rm = T) %>%
+        mask(lat.mask)
+
+
+    # I THINK THIS IS THE ONE TO SAVE:
+    lat.test <- values(y.rast, xy = TRUE) %>% as.data.table()
+
+    #write.csv(df_y_coordinate, file = "D:/BP_Layers/outputs/crops/lat/044.csv", row.names = FALSE)
+    write.csv(lat.test, file = paste0("D:/BP_Layers/outputs/crops/lat/", polygon$name, ".csv"), row.names = FALSE)
+
+    rm(lat.test)
+}
+
+
+###############################################################################
+
+
+#mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
+lat.mask = crop(mask_crop, polygon)
+
 lat_long <- project(lat.mask, "+proj=longlat +datum=WGS84")
 
 # Extract y coordinate of each cell center
@@ -59,13 +113,13 @@ global(lat.mask, "notNA")
 plot(y.rast)
 
 # Save as dataframe
-df_y_coordinate <- data.frame(y_coordinate)
+#df_y_coordinate <- data.frame(y_coordinate)
 
 # I THINK THIS IS THE ONE TO SAVE:
 lat.test <- values(y.rast, xy = TRUE) %>% as.data.table()
 
 #write.csv(df_y_coordinate, file = "D:/BP_Layers/outputs/crops/lat/044.csv", row.names = FALSE)
-write.csv(lat.test, file = "D:/BP_Layers/outputs/crops/lat/044.csv", row.names = FALSE)
+write.csv(lat.test, file = "D:/BP_Layers/outputs/crops/lat/488.csv", row.names = FALSE)
 
 
 # Put y.rast through tiling to match boxes???

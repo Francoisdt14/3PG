@@ -41,6 +41,7 @@ boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 #plot it to see what it looks like
 plot(mask_crop, ext = ext(boxes.v), col = "red")
+#plot(rast_m, ext = ext(boxes.v))
 plot(boxes.v, add = T)
 text(boxes.v, boxes.v$name)
 
@@ -49,23 +50,44 @@ text(boxes.v, boxes.v$name)
 # Set file path for the folder containing the input rasters
 
 #folder_path <- "D:/BP_Layers/outputs/inputs"
-folder_path <- "D:/BP_Layers/outputs/climate"
-#folder_path <- "D:/Radiation/30m_crop_align/M_nineS"
+#folder_path <- "D:/BP_Layers/outputs/climate"
+folder_path <- "D:/Radiation/30m_crop_align/M_nineS"
 
 # vector polygons used for cropping = boxes.v from above!
 
 # Get a list of file names in the folder
 raster_files <- list.files(folder_path, pattern = "*.tif$")
 
+# Define which boxes we want to do here:
+
+vals <- c(512:523, 543:554)
+
+# Change this to check if the things are writing to the correct place
+#target_folder <- "D:/BP_Layers/outputs/crops/inputs2"
+target_folder <- "D:/BP_Layers/outputs/crops/rad"
+#target_folder <- "D:/BP_Layers/outputs/crops/climate"
+
+
 # Loop through the vector polygons and crop the rasters - here we are cropping just boxes 32:34...
-for (i in 44:46) {         #nrow(boxes.v)) {
-  polygon <- boxes.v[i, ]
+for (i in vals) {         #nrow(boxes.v)) {
+
+    polygon <- boxes.v[i, ]
+
+    filename <- paste0(polygon$name, ".csv")
+    filepath <- file.path(target_folder, filename)
+
+    if (file.exists(filepath)) {
+        cat("Skipping file", filename, "because it already exists.\n")
+        next  # move to next iteration of the loop
+    }
+
 
   # Initialize an empty data table to store values for each cropped area
-  values_df <- data.table()
+    values_df <- data.table()
 
   # Loop through the list of rasters and extract values
-  for (j in 1:length(raster_files)) {
+    for (j in 1:length(raster_files)) {
+
     file_path <- paste0(folder_path, "/", raster_files[j])
     raster <- rast(file_path)
 
@@ -92,7 +114,7 @@ for (i in 44:46) {         #nrow(boxes.v)) {
   }
 
   # Save the data table as a .csv file
-  write.csv(values_df, paste0("D:/BP_Layers/outputs/crops/climate/", polygon$name, ".csv"), row.names = FALSE)
+  write.csv(values_df, paste0(target_folder,"/", polygon$name,".csv"), row.names = FALSE)
   rm(values_df)
 }
 

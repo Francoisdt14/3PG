@@ -62,7 +62,7 @@ global(rast_m, "notNA")
 fl <- ("D:/BP_Layers/M_9S/species/leading-species_2019.dat")
 
 #### CHECK THIS AND ADJUST FOR SPECIES CODE - SOLUTION SEEMS TO BE AS FACTOR
-# PRE-PROJECTION!
+# PRE-PROJECTION! - NEED TO MAKE SURE THAT THE RASTER IS CLASSIFIED AS FACTORS
 
 for (i in 1:length(fl)) {
 
