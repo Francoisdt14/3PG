@@ -4,13 +4,13 @@
 source("R/lib.R")
 
 
-df.424.50y <- result_df
+#df.test <- result_df
 #write.csv(df.424.50y, file = "D:/BP_Layers/outputs/crops/npp/df.424.50y.csv")
-df.test <- read.csv("D:/BP_Layers/outputs/crops/dataframes/515.csv")
+df.test <- read.csv("D:/BP_Layers/outputs/crops/dataframes/454.csv")
 #df.test2 <- read.csv("D:/BP_Layers/outputs/crops/dataframes/516.csv")
 
 lat.test <- read.csv("D:/BP_Layers/outputs/crops/lat/515.csv") %>% na.omit
-inputs.test <- read.csv("D:/BP_Layers/outputs/crops/climate/515.csv") %>% na.omit
+inputs.test <- read.csv("D:/BP_Layers/outputs/crops/climate/454.csv") %>% na.omit
 
 #colnames(lai.df.033)[1]  <- "LAI"    # change column name for x column
 
@@ -21,8 +21,7 @@ inputs.test <- read.csv("D:/BP_Layers/outputs/crops/climate/515.csv") %>% na.omi
 
 # k = number of box we are on (424 here)
 
-k = 514
-
+k = 454
 
 polygon <- boxes.v[k, ]
 mini.r <-  crop(mask_crop, polygon)
@@ -43,13 +42,15 @@ num.valid = global(r.id, "notNA") %>% as.numeric()
 
 
 # Read in output (NPP or whatever) -> change this to the relevant output
-vals = df.424.50y %>% pull("dbh")
+vals = df.test %>% pull("npp")
 
 # This should be true
 length(vals) == num.valid
 
 # Fill in the blank raster with the output pixels
 mini.r[!is.na(mini.r)] <- vals
+
+plot(mini.r)
 
 df.424.50y.rast <- mini.r
 
@@ -70,16 +71,16 @@ terra::writeRaster(dbh.488.rast, filename = "D:/BP_Layers/outputs/crops/output_r
 # mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 # boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
-csv_folder <- "D:/BP_Layers/outputs/crops/dataframes"
+csv_folder <- "D:/BP_Layers/outputs/crops/dataframes_50yr"
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = csv_folder, pattern = "*.csv")
 
 
-keyword <- "basal_area"
+keyword <- "lai"
 
 # where are things saved?
-target_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters/", keyword)
+target_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters_50yr/", keyword)
 
 
 # Loop through each CSV file
@@ -118,7 +119,6 @@ for (file in csv_files) {
 
     #dt = values(r.id, na.rm = T) %>% as.data.table()
 
-    # Read in blank raster
     #r = rast()
     # How many valid pixels?
     #num.valid = global(r.id, "notNA") %>% as.numeric()
@@ -133,7 +133,7 @@ for (file in csv_files) {
     mini.r[!is.na(mini.r)] <- vals
 
     # Add the number to the raster file name
-    rast_name <- paste0("D:/BP_Layers/outputs/crops/output_rasters/basal/",keyword, num.box, ".tif")
+    rast_name <- paste0(target_folder,"/",keyword, num.box, ".tif")
 
     # Write the raster to disk
     terra::writeRaster(mini.r, filename = rast_name, overwrite=T)
@@ -144,14 +144,16 @@ for (file in csv_files) {
 ###########################
 
 # combining groups of tiles :
-raster_folder <- "D:/BP_Layers/outputs/crops/output_rasters/basal"
+raster_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters_50yr/", keyword)
 # Get a list of all CSV files in the folder
 raster_files <- list.files(path = raster_folder, pattern = "*.tif")
 # terra::mosaic
 
 group.of.49 <- terra::vrt(paste(raster_folder, raster_files, sep = "/"))
 
-plot(group.of.49)
+plot(group.of.49, col=viridis(100),  main="Leaf Area Index")
 
-writeRaster(group.of.9, filename = "D:/BP_Layers/outputs/crops/output_rasters/npp.tif")
+writeRaster(group.of.49, filename = paste0("D:/BP_Layers/outputs/crops/output_rasters_50yr/",keyword, "_","49",".tif"))
 
+##basal454 <- rast("D:/BP_Layers/outputs/crops/output_rasters/basal_area/basal_area454.tif")
+plot(basal454)

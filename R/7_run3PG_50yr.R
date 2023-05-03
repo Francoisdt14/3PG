@@ -1,25 +1,7 @@
-# Datasets required by r3PG for each tile:
-#   site
-#   species
-#   climate
-#   thinning
-#   parameters
-#   size_dist
 
-source("R/lib.R")
+# 50 years old!!
 
-
-
-# We need parameter data for each species
-# Currently using customized parameters (but can use parameters directly from the vignette)
-f_loc <- './data/input/data.input2.xlsx'
-parameters <-  read_xlsx(f_loc, 'parameters')
-
-#################################################################################
-# Main Function
-
-
-Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
+Calculate_3PG_50 <- function(climate.df, inputs.df, cl = NA) {
     # Currently using customized parameters (but can use parameters directly from the vignette)
 
     test_df = pblapply(cl = cl, 1:nrow(climate.df), FUN = function(i){
@@ -55,8 +37,8 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
         site$asw_max <- 300
 
         # simulation from and to!
-        site$from <-paste(inputs.df[i,4],"-6", sep = "")
-        #site$from <- '1969-12'
+        #site$from <-paste(inputs.df[i,4],"-6", sep = "")
+        site$from <- '1969-06'
         site$to <- '2019-12'
 
         ##########################################################
@@ -87,10 +69,9 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
         }
 
 
-        species$planted <- paste(inputs.df[i,4],"-6", sep = "") # should now come from the AGE raster!
-
+        #species$planted <- paste(inputs.df[i,4],"-6", sep = "") # should now come from the AGE raster!
         #### set it to 50 years here
-        #species$planted <- '1969-12' ###
+        species$planted <- '1969-06' ###
 
         species$fertility <- 0.7 # should come from soil - generally low fertility from literature
         species$stems_n <- 4000 # literature
@@ -119,8 +100,9 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
         biom_stem_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_stem', 5]
         biom_foliage_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_foliage', 5]
         biom_root_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_root', 5]
-
         volume_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'volume', 5]
+
+        # if()
 
         out_3PG$year <- lubridate::year(out_3PG$date)
         # filter the data for the final year and the 'npp' variable
@@ -128,117 +110,44 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
         # then, use the 'sum' function to add up all of the npp values for the final year
         total_npp <- sum(final_year_npp$value)
 
-        return(data.frame("dbh" = dbh_select,
+        # return(data.frame("dbh" = dbh_select,
+        #                   "lai" = lai_select,
+        #                   "basal_area" = basal_select,
+        #                   "biomass_stem" = biom_stem_select,
+        #                   "biomass_foliage" = biom_foliage_select,
+        #                   "biomass_root" = biom_root_select,
+        #                   "volume" = volume_select,
+        #                   "npp" = total_npp))
+
+        return(data.frame(#"volume" = volume_select,
                           "lai" = lai_select,
                           "basal_area" = basal_select,
-                          "biom_stem" = biom_stem_select,
-                          "biom_foliage" = biom_foliage_select,
-                          "biom_root" = biom_root_select,
-                          "volume" = volume_select,
+                          "biomass_stem" = biom_stem_select,
+                          "biomass_foliage" = biom_foliage_select,
+                          "biomass_root" = biom_root_select,
                           "npp" = total_npp))
-    }) %>% bind_rows()
+
+
+    }) #%>% bind_rows()
 
     return(test_df)
 }
 
-##################################################################################
-
-
-# Read in the two main data sources - climate data, and remaining inputs
-
-# climate includes: Frost, precipitation, temps, radiation
-# Inputs are the remaining inputs required by 3PG that are rasterized: DEM, disturbance date, and species.
-# the inputs dataframe was created in 5_tile_raster and just happens to be the non-climate data that was processed at the same time
-
-# You should have access to these pre-prepared rds files
-
-
-# Use .rds because it saves space
-#climate_df <- readRDS("./data/input/climate_033.rds") %>% na.omit()
-#inputs_df <- readRDS("./data/input/inputs_033.rds") %>% na.omit()
-boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
-
-# csvs are too large for github
-output_folder <- "D:/BP_Layers/outputs/crops/dataframes_2"
-
-#tile.numb <- c(360:366, 391:397, 422, 423, 427, 428, 453, 454, 458, 459, 484, 485, 489, 490, 515:521, 546:552)
-tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521,546:552)
-
-#tile.numb <- (360)
-
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
 clusterEvalQ(cl, {library(r3PG); library(dplyr); library(readxl); library(data.table); library(tidyr); library(tidyverse); library(lubridate)})  # source also works
+clusterExport(cl, varlist = c("climate_df2", "full_comb_clean", "f_loc", "parameters"))
 
-for (i in tile.numb) {         #nrow(boxes.v)) {
+result_50 <- Calculate_3PG_50(climate_df2[1:100,], full_comb_clean[1:100,], cl = cl)
 
-    #polygon <- boxes.v[boxes.v$name == i,]
+result_df_50 <- bind_rows(result_50)
 
-    filename <- paste0(i, ".csv")
-    filepath <- file.path(output_folder, filename)
-
-    if (file.exists(filepath)) {
-        cat("Skipping file", filename, "because it already exists.\n")
-        next  # move to next iteration of the loop
-    }
-
-    lat_full <- read.csv(paste0("D:/BP_Layers/outputs/crops/lat/",i, ".csv"))
-    inputs_full <- read.csv(paste0("D:/BP_Layers/outputs/crops/inputs2/",i,".csv"))
-
-    inputs_full <- select(inputs_full, -leading.species_2019)
-    full_comb <- cbind(lat_full, inputs_full)
-
-    #dim(full_comb)
-    #round the forest age?
-    full_comb$Forest_Age_2019 <- ifelse(rowSums(is.na(full_comb)) == 1 & is.na(full_comb$Forest_Age_2019), 2019, full_comb$Forest_Age_2019)
-
-    full_comb_clean <- full_comb %>% na.omit()
-    full_comb_clean$Forest_Age_2019 <- round(full_comb_clean$Forest_Age_2019)
-    full_comb_clean$focal_mean <- round(full_comb_clean$focal_mean, 3)
-    full_comb_clean$dem_crop_M_9S <- round(full_comb_clean$dem_crop_M_9S)
-    full_comb_clean$Forest_Age_2019 <- ifelse(full_comb_clean$Forest_Age_2019 < 1869, 1869, full_comb_clean$Forest_Age_2019)
-    colnames(full_comb_clean) <- c("lat", "dem", "disturbance", "age", "species")
-
-    climate_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/climate/",i,".csv")) %>% na.omit()
-    rad_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/rad/",i,".csv")) %>% na.omit()
-    # Need to change radiation names, divide by 10, and then divide by 2, and cbind the radiation data..
-    colnames(rad_df) <- c("Rad01", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09", "Rad10", "Rad11", "Rad12")
-    # Divide all values by 20
-    rad_df2 <- rad_df / 20
-    climate_df2 <- cbind(climate_df, rad_df2)
-
-    ####################################
-    # Need to make sure all the dataframes are the same size
-    # Here we are running things in parallel!
-
-
-    clusterExport(cl, varlist = c("climate_df2", "full_comb_clean", "f_loc", "parameters"))
-
-    # CHECK THE FUNCTION CALL IS CORRECT HERE!!!
-
-    #result <- Calculate_3PG_Y(climate_df2, full_comb_clean, cl = cl)
-
-    result <- Calculate_3PG_Y(climate_df2, full_comb_clean, cl = cl)
-
-    result_df <- bind_rows(result)
-
-    write.csv(result_df, paste0(output_folder,"/",i,".csv"), row.names = FALSE)
-    # fwrite
-
-    # print message
-    cat(filename, "written.\n")
-
-    rm(result_df)
-
-    # Reset the items in the clusters so that you save memory and also don't accidentally re-do a tile
-    climate_df2 <- NA
-    full_comb_clean <- NA
-    clusterExport(cl, varlist = c("climate_df2", "full_comb_clean", "f_loc", "parameters"))
-}
 
 stopCluster(cl)
 
-# 9ish seconds for 1000 rows (20 cores)
-# 1:19 for 10 000 rows (20 cores)
+write.csv(result_df_50, "D:/BP_Layers/outputs/crops/dataframes_50yr/454.csv", row.names = FALSE)
+# fwrite
 
-#test.df <- read.csv("D:/BP_Layers/outputs/crops/dataframes_2/360.csv")
+
+testtest <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'volume', 5]
+

@@ -17,7 +17,7 @@ library(multidplyr)
 prepare_input( site = d_site, species = d_species, climate = d_climate, d_thinning)
 
 # main function
-out_3PG <- run_3PG(
+test_out_3PG <- run_3PG(
   site        = d_site,
   species     = d_species,
   climate     = d_climate,
@@ -28,7 +28,7 @@ out_3PG <- run_3PG(
                      height_model = 1, correct_bias = 0, calculate_d13c = 0),
   check_input = TRUE, df_out = TRUE)
 
-head( out_3PG )
+head( test_out_3PG)
 
 
 # Plotting the data different parameters
@@ -95,3 +95,32 @@ height_output <- out_3PG2 %>%
   filter( variable %in% sel_var )
 
 #######################################################################################
+
+
+dbh_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'dbh', 5]
+lai_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'lai', 5]
+basal_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'basal_area', 5]
+
+biom_stem_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'biom_stem', 5]
+biom_foliage_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'biom_foliage', 5]
+biom_root_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'biom_root', 5]
+
+volume_select <- out_3PG2[out_3PG2$date == '2010-12-31' & out_3PG2$variable == 'volume', 5]
+
+out_3PG2$year <- lubridate::year(out_3PG2$date)
+# filter the data for the final year and the 'npp' variable
+final_year_npp <- out_3PG2 %>% filter(year == 2010 & variable == "npp")
+# then, use the 'sum' function to add up all of the npp values for the final year
+total_npp <- sum(final_year_npp$value)
+
+test.df <- data.frame("dbh" = dbh_select,
+                      "lai" = lai_select,
+                      "npp" = total_npp,
+                      "basal_area" = basal_select,
+                      "biom_stem" = biom_stem_select,
+                      "biom_foliage" = biom_foliage_select,
+                      "biom_root" = biom_root_select,
+                      "volume" = volume_select)
+
+
+rm(dbh_select, lai_select, basal_select, biom_stem_select, biom_foliage_select, biom_root_select, volume_select, final_year_npp, total_npp)

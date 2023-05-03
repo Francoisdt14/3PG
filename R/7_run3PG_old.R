@@ -351,7 +351,7 @@ Calculate_3PG_Y <- function(climate.df, inputs.df, cl = NA) {
 
         out_3PG$year <- lubridate::year(out_3PG$date)
         # filter the data for the final year and the 'npp' variable
-        final_year_npp <- out_3PG %>% filter(year == 1935 & variable == "npp")
+        final_year_npp <- out_3PG %>% filter(year == 2019 & variable == "npp")
         # then, use the 'sum' function to add up all of the npp values for the final year
         total_npp <- sum(final_year_npp$value)
 

@@ -81,3 +81,42 @@ freq2 <- table(as.vector(species_rast2))
 freq_ordered2 <- sort(freq2, decreasing = TRUE)
 
 head(freq_ordered2)
+
+
+######################################################################################
+# PLoitting species info
+library(tidyverse)
+
+# Currently using customized parameters (but can use parameters directly from the vignette)
+datasheet <- 'C:/Users/fdutoit.stu/Sync/PostDoc/species_tests/Spruce_Jack_Lodge_Parameters.xlsx'
+Comb <-  read_xlsx(datasheet, 'Comb')
+
+
+# Subset the dataframe to only include the Basal Area parameter
+df_subset <- subset(Comb, Parameter == "Basal Area")
+df_subset2 <- subset(Comb, Parameter == "DBH")
+# Create the plot with ggplot2
+p1 <- ggplot(df_subset, aes(x = Reference, y = `3-PG`, color = Species)) +
+    geom_point(size = 2.5) +
+    scale_x_continuous(name = expression(paste("Reference Data (m"^"2"*" ha"^"-1"*")"))) + # use expression function to format the axis label with superscripts
+    scale_y_continuous(name = expression(paste("3-PG Data (m"^"2"*" ha"^"-1"*")"))) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.7) +
+    theme(aspect.ratio = 1) + theme_classic() +
+    scale_color_manual(values = c("magenta2", "gold2", "turquoise")) +
+    coord_equal()
+
+
+p2 <- ggplot(df_subset2, aes(x = Reference, y = `3-PG`, color = Species)) +
+    geom_point(size = 2.5) +
+    scale_x_continuous(name = "Reference Data (cm)") +
+    scale_y_continuous(name = "3-PG Data (cm)") +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.7) +
+    theme(aspect.ratio = 1) + theme_classic() +
+    scale_color_manual(values = c("magenta2", "gold2", "turquoise")) +
+    coord_equal()
+
+
+ggsave("C:/Users/fdutoit.stu/Sync/PostDoc/species_tests/basal_area.png", p1, width = 6, height = 6, dpi = 300)
+
+
+
