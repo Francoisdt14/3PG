@@ -1,6 +1,5 @@
 # Creating a raster of the outputs
 
-
 source("R/lib.R")
 
 
@@ -68,8 +67,8 @@ terra::writeRaster(dbh.488.rast, filename = "D:/BP_Layers/outputs/crops/output_r
 #################################
 # Loop through this to make our rasters
 
-# mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
-# boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
+boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 csv_folder <- "D:/BP_Layers/outputs/crops/dataframes_50yr"
 
