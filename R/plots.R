@@ -86,9 +86,10 @@ head(freq_ordered2)
 ######################################################################################
 # PLoitting species info
 library(tidyverse)
-
+library(readxl)
 # Currently using customized parameters (but can use parameters directly from the vignette)
-datasheet <- 'C:/Users/fdutoit.stu/Sync/PostDoc/species_tests/Spruce_Jack_Lodge_Parameters.xlsx'
+datasheet <- 'D:/Sync/PostDoc/species_tests/Spruce_Jack_Lodge_Parameters.xlsx'
+
 Comb <-  read_xlsx(datasheet, 'Comb')
 
 
@@ -118,5 +119,49 @@ p2 <- ggplot(df_subset2, aes(x = Reference, y = `3-PG`, color = Species)) +
 
 ggsave("C:/Users/fdutoit.stu/Sync/PostDoc/species_tests/basal_area.png", p1, width = 6, height = 6, dpi = 300)
 
+#######################################
+
+# Load the ggplot2 and ggmap packages
+library(ggplot2)
+library(ggmap)
+
+# Read the CSV file into a data frame
+data <- read.csv("D:/Sync/PostDoc/species_tests/study_locations.csv")
+
+# Define a vector of species names
+species_names <- unique(data$Species)
+
+# Define a vector of colors to map to the species names
+species_colors <- c("magenta2", "turquoise", "gold2") # Add more colors as needed
+
+# Define a named vector that maps each species name to a color
+species_color_map <- setNames(species_colors[1:length(species_names)], species_names)
+
+# Add a new column to the data frame that maps each species name to a color
+data$SpeciesColor <- species_color_map[data$Species]
+
+# Plot the sample sites and color them by the 'SpeciesColor' column
+points(data$Longitude, data$Latitude, pch = 19, cex = 0.5, col = data$SpeciesColor)
 
 
+############################################################################
+
+library(maps)
+library(mapdata)
+library(maptools)
+
+provinces <- readOGR(dsn = "Z:/_CanadaLayers/Vectors/txomin/ca_prov.shp")
+
+shapefile <- readOGR(dsn ="D:/PostDoc/Layers/BP_Maps/ManagedForests.shp")
+
+points(data$Longitude, data$Latitude, pch=19, cex=1)  #plot my sample sites
+
+
+
+plot(provinces)
+plot(shapefile, add = T)
+#addShapefile(shapefile, col = "blue", border = "black")
+
+maps::map(database = "world", regions = "Canada",ylim=c(40,75),col="gray90", fill=TRUE)
+points(data$Longitude, data$Latitude, pch=19, col=data$SpeciesColor, cex=1)  #plot my sample sites
+text(data$Longitude, data$Latitude, labels = data$Study.Area, pos = 3, offset = 1)
