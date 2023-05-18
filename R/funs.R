@@ -229,31 +229,20 @@ Calculate_3PG_50 <- function(climate.df, inputs.df, cl = NA) {
         biom_root_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_root', 5]
         volume_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'volume', 5]
 
-        # if()
-
         out_3PG$year <- lubridate::year(out_3PG$date)
         # filter the data for the final year and the 'npp' variable
         final_year_npp <- out_3PG %>% filter(year == 2019 & variable == "npp")
         # then, use the 'sum' function to add up all of the npp values for the final year
         total_npp <- sum(final_year_npp$value)
 
-        # return(data.frame("dbh" = dbh_select,
-        #                   "lai" = lai_select,
-        #                   "basal_area" = basal_select,
-        #                   "biomass_stem" = biom_stem_select,
-        #                   "biomass_foliage" = biom_foliage_select,
-        #                   "biomass_root" = biom_root_select,
-        #                   "volume" = volume_select,
-        #                   "npp" = total_npp))
-
-        return(data.frame(#"volume" = volume_select,
-            "lai" = lai_select,
-            "basal_area" = basal_select,
-            "biomass_stem" = biom_stem_select,
-            "biomass_foliage" = biom_foliage_select,
-            "biomass_root" = biom_root_select,
-            "npp" = total_npp))
-
+        return(data.frame("dbh" = dbh_select,
+                          "lai" = lai_select,
+                          "basal_area" = basal_select,
+                          "biom_stem" = biom_stem_select,
+                          "biom_foliage" = biom_foliage_select,
+                          "biom_root" = biom_root_select,
+                          "volume" = volume_select,
+                          "npp" = total_npp))
 
     }) #%>% bind_rows()
 

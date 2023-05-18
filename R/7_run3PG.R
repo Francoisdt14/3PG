@@ -32,10 +32,10 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # csvs are too large for github
-output_folder <- "D:/BP_Layers/outputs/crops/dataframes_2"
+output_folder <- "D:/BP_Layers/outputs/crops/dataframes_50yr_2"
 
-#tile.numb <- c(360:366, 391:397, 422, 423, 427, 428, 453, 454, 458, 459, 484, 485, 489, 490, 515:521, 546:552)
-tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521,546:552)
+
+tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521, 546:552)
 
 #tile.numb <- (360)
 
@@ -89,9 +89,9 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
 
     # CHECK THE FUNCTION CALL IS CORRECT HERE!!!
 
-    #result <- Calculate_3PG_50(climate_df2, full_comb_clean, cl = cl)
+    result <- Calculate_3PG_50(climate_df2, full_comb_clean, cl = cl)
 
-    result <- Calculate_3PG(climate_df2, full_comb_clean, cl = cl)
+    #result <- Calculate_3PG(climate_df2, full_comb_clean, cl = cl)
 
     result_df <- bind_rows(result)
 
