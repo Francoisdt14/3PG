@@ -4,7 +4,7 @@
 
 #--- define libraries ---#
 packages <- c('tidyverse','sf', 'sp','terra','sgsR','rmdformats','rmarkdown', 'r3PG', "data.table", "silvR21", "parallel",
-              "pbapply", "tictoc", "readxl", "arrow", "furrr", "lubridate")
+              "pbapply", "tictoc", "readxl", "arrow", "furrr", "lubridate", "viridis", "sgsR")
 
 installed_packages <- packages %in% rownames(installed.packages())
 
