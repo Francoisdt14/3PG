@@ -114,33 +114,6 @@ plot(norm_diff_basal, col=viridis(100),  main="DIFFERENCE")
 
 par(mfrow = c(1, 1))
 
-##############################
-# sgsR
-
-#--- Load mraster from internal data ---#
-r <- system.file("extdata", "mraster.tif", package = "sgsR")
-
-#--- load mraster using the terra package ---#
-mraster <- terra::rast(r)
-
-
-#--- apply kmeans algorithm to metrics raster ---#
-sraster <- strat_quantiles(
-    mraster = mraster$zq90, # use mraster as input for sampling
-    nStrata = 4, # algorithm will produce 4 strata
-    plot = TRUE
-) # algorithm will plot output
-
-
-
-
-
-
-
-
-
-
-
 
 
 ############################## LOOK AT SUMMARY STATISTICS OF THE DATA
@@ -179,15 +152,25 @@ summary2 <- df2 %>%
     )
 
 # Combine the data frames
-df_tot <- rbind(data.frame(Data = "df", values = df$value),
-            data.frame(Data = "df2", values = df2$value),
-            data.frame(Data = "df3", values = df3$value),
-            data.frame(Data = "df4", values = df4$value) )
+
+df_tot <- cbind(df$value, df2$value, df3$value, df4$value)
+colnames(df_tot) <- c("bio_ntems", "bio_3pg", "vol_ntems", "vol_3pg")
+df_tot <-  as.data.frame(df_tot)
 
 # Create the density plot
-ggplot(df_tot, aes(x = values, fill = Data)) +
+
+ggplot(df_tot, aes(x = bio_ntems, fill = "bio_ntems")) +
     geom_density(alpha = 0.5) +
-    scale_fill_manual(values = c("blue", "red", "green", "purple")) +
+    geom_density(aes(x = bio_3pg, fill = "bio_3pg"), alpha = 0.5) +
+    scale_fill_manual(values = c("blue", "red")) +
+    labs(title = "Density Plot Comparison", x = "Values", y = "Density") +
+    theme_minimal()
+
+
+ggplot(df_tot, aes(x = vol_ntems, fill = "vol_ntems")) +
+    geom_density(alpha = 0.5) +
+    geom_density(aes(x = vol_3pg, fill = "vol_3pg"), alpha = 0.5) +
+    scale_fill_manual(values = c("blue", "red")) +
     labs(title = "Density Plot Comparison", x = "Values", y = "Density") +
     theme_minimal()
 
