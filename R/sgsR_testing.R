@@ -41,47 +41,27 @@ basal_ntems_NORM
 biomass_ntems_NORM
 volume_ntems_NORM
 
-
 ##############################
 # sgsR
-
-#--- Load mraster from internal data ---#
-r <- system.file("extdata", "mraster.tif", package = "sgsR")
-
-#--- load mraster using the terra package ---#
-mraster <- terra::rast(r)
-
-
-#--- apply kmeans algorithm to metrics raster ---#
-sraster <- strat_quantiles(
-    mraster = mraster$zq90, # use mraster as input for sampling
-    nStrata = 4, # algorithm will produce 4 strata
-    plot = TRUE
-) # algorithm will plot output
-
-
-
-
-
-
-
-
-
-
-
 
 ls <- layer_stack[[c(1,4)]]
 
 sp <- layer_stack[[2]]
 
 
+# 2 layers, 3 strata, then add epscies
+qt_strat <- strat_quantiles(ls, nStrata = c(3,3), plot = TRUE)
+qt_sp <- c(qt_strat,sp)
+
+
+# single layer, 5 strata
 qt_strat <- strat_quantiles(layer_stack[[1]], nStrata = 5, plot = TRUE)
 
 qt_breaks <- strat_breaks(layer_stack[[1]], breaks = c(700,1000,1500,2000), plot = TRUE)
 
-#qt_sp <- c(qt_strat,sp)
+qt_sp <- c(qt_strat,sp)
 
-#mapped <- strat_map(qt_sp, stack = TRUE, plot = TRUE)
+mapped <- strat_map(qt_sp, stack = TRUE, plot = TRUE)
 
 unique(values(mapped))
 
@@ -92,7 +72,12 @@ sample_strat(sraster = qt_breaks, nSamp = 100, plot=TRUE, allocation = "equal", 
 sample_systematic(raster = ls[[1]], cellsize = 1000, square = FALSE, plot = TRUE)
 
 
-s <- extract_metrics(mraster = bio, existing = s)
+calculate_representation(sraster = mapped$strata, existing = s, plot = TRUE)
+
+
+s2 <- extract_metrics(mraster = bio, existing = s)
+
+
 
 s %>%
     group_by(strata) %>%
@@ -100,7 +85,7 @@ s %>%
 
 
 bio <- c(biomas_ntems, biomas_3pg)
-names(bio) <- c("ntems_bio","3pg_bio")
+names(bio) <- c("ntems_bio","pg_bio")
 
 
 
