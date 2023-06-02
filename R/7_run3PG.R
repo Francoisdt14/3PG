@@ -31,13 +31,16 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 #inputs_df <- readRDS("./data/input/inputs_033.rds") %>% na.omit()
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
-# csvs are too large for github
-output_folder <- "D:/BP_Layers/outputs/crops/dataframes_50yr_2"
+# Make sure we are sending this to the correct folder!
+output_folder <- "D:/BP_Layers/outputs/crops/dataframes_2"
+
+# 49 square (7 x 7)
+# tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521, 546:552)
+
+# 121 square (11 x 11)
+tile.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
 
 
-tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521, 546:552)
-
-#tile.numb <- (360)
 
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
@@ -89,9 +92,9 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
 
     # CHECK THE FUNCTION CALL IS CORRECT HERE!!!
 
-    result <- Calculate_3PG_50(climate_df2, full_comb_clean, cl = cl)
+    #result <- Calculate_3PG_50(climate_df2, full_comb_clean, cl = cl)
 
-    #result <- Calculate_3PG(climate_df2, full_comb_clean, cl = cl)
+    result <- Calculate_3PG(climate_df2, full_comb_clean, cl = cl)
 
     result_df <- bind_rows(result)
 

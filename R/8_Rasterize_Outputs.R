@@ -10,16 +10,16 @@ mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # This is the folder where we saved our 3PG outputs
-csv_folder <- "D:/BP_Layers/outputs/crops/dataframes_50yr_2"
+csv_folder <- "D:/BP_Layers/outputs/crops/dataframes_2"
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = csv_folder, pattern = "*.csv")
 
 #Need to decide which raster we want to produce - keyword is from the outputs of the 3PG function
-keyword <- "lai"
+keyword <- "volume"
 
 # where are things saved?
-target_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters_50yr/", keyword)
+target_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters/", keyword)
 
 
 # Loop through each CSV file
@@ -86,13 +86,15 @@ for (file in csv_files) {
 raster_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters/", keyword)
 # Get a list of all CSV files in the folder
 raster_files <- list.files(path = raster_folder, pattern = "*.tif")
+num_files <- length(raster_files)
 # terra::mosaic
 
-group.of.49 <- terra::vrt(paste(raster_folder, raster_files, sep = "/"))
+group <- terra::vrt(paste(raster_folder, raster_files, sep = "/"))
 
-plot(group.of.49, col=viridis(100),  main=paste0(keyword))
+plot(group, col=viridis(100),  main=paste0(keyword))
 
-writeRaster(group.of.49, filename = paste0("D:/BP_Layers/outputs/crops/output_rasters_50yr/49_composite/",keyword, "_","49",".tif"))
+# be sure to change the number or
+writeRaster(group, filename = paste0("D:/BP_Layers/outputs/crops/output_rasters/121_composite/",keyword, "_",num_files,".tif"))
 
 
 ##############################################################################
