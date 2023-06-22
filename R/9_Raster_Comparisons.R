@@ -43,7 +43,7 @@ diff_biomass <- (biomas_3pg - biomas_ntems)
 diff_volumes <- (volume_3pg - volume_ntems)
 
 # Set up the plot window to have three columns
-par(mfrow = c(1, 3))
+par(mfrow = c(1, 2))
 
 plot(basal_3pg, col=viridis(100),  main="3PG basal")
 plot(basal_ntems, col=viridis(100),  main="NTEMS basal")
@@ -159,7 +159,7 @@ df_tot <-  as.data.frame(df_tot)
 
 # Create the density plot
 
-ggplot(df_tot, aes(x = bio_ntems, fill = "bio_ntems")) +
+biom_comp <- ggplot(df_tot, aes(x = bio_ntems, fill = "bio_ntems")) +
     geom_density(alpha = 0.5) +
     geom_density(aes(x = bio_3pg, fill = "bio_3pg"), alpha = 0.5) +
     scale_fill_manual(values = c("blue", "red")) +
@@ -167,7 +167,7 @@ ggplot(df_tot, aes(x = bio_ntems, fill = "bio_ntems")) +
     theme_minimal()
 
 
-ggplot(df_tot, aes(x = vol_ntems, fill = "vol_ntems")) +
+vol_comp <- ggplot(df_tot, aes(x = vol_ntems, fill = "vol_ntems")) +
     geom_density(alpha = 0.5) +
     geom_density(aes(x = vol_3pg, fill = "vol_3pg"), alpha = 0.5) +
     scale_fill_manual(values = c("blue", "red")) +

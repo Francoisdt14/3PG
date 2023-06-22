@@ -32,15 +32,18 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # Make sure we are sending this to the correct folder!
-output_folder <- "D:/BP_Layers/outputs/crops/dataframes_2"
+output_folder <- "D:/BP_Layers/outputs/crops/RAD_TEST/original_lodge_half_rad"
+
+# 25 square 5 x 5
+#tile.numb <- c(392:396, 423:427, 454:458, 485:489, 516:520)
 
 # 49 square (7 x 7)
-# tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521, 546:552)
+#tile.numb <- c(360:366, 391:397, 422:428, 453:459, 484:490, 515:521, 546:552)
 
 # 121 square (11 x 11)
-tile.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
+#tile.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
 
-
+tile.numb <- c(889, 892)
 
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
@@ -79,8 +82,17 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
     rad_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/rad/",i,".csv")) %>% na.omit()
     # Need to change radiation names, divide by 10, and then divide by 2, and cbind the radiation data..
     colnames(rad_df) <- c("Rad01", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09", "Rad10", "Rad11", "Rad12")
-    # Divide all values by 20
+
+    # Divide all values by 20 - the scale factor is 0.1, and then need to factor in that PAR is half of all the radiation
+
+    ##### DOUBLE CHECK RADIATION!!!
+
+    #####
+
     rad_df2 <- rad_df / 20
+
+    #rad_df2 <- rad_df / 10
+
     climate_df2 <- cbind(climate_df, rad_df2)
 
     ####################################
@@ -92,9 +104,9 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
 
     # CHECK THE FUNCTION CALL IS CORRECT HERE!!!
 
-    #result <- Calculate_3PG_50(climate_df2, full_comb_clean, cl = cl)
+    result <- Calculate_3PG_80(climate_df2, full_comb_clean, cl = cl)
 
-    result <- Calculate_3PG(climate_df2, full_comb_clean, cl = cl)
+    #result <- Calculate_3PG_TEST(climate_df2, full_comb_clean, cl = cl)
 
     result_df <- bind_rows(result)
 
