@@ -32,7 +32,7 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # Make sure we are sending this to the correct folder!
-output_folder <- "D:/BP_Layers/outputs/crops/RAD_TEST/original_lodge_half_rad"
+output_folder <- "D:/BP_Layers/outputs/crops/892"
 
 # 25 square 5 x 5
 #tile.numb <- c(392:396, 423:427, 454:458, 485:489, 516:520)
@@ -83,15 +83,12 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
     # Need to change radiation names, divide by 10, and then divide by 2, and cbind the radiation data..
     colnames(rad_df) <- c("Rad01", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09", "Rad10", "Rad11", "Rad12")
 
-    # Divide all values by 20 - the scale factor is 0.1, and then need to factor in that PAR is half of all the radiation
-
+    # Divide all values by 10 - the scale factor is 0.1
+    rad_df2 <- rad_df / 10
     ##### DOUBLE CHECK RADIATION!!!
 
-    #####
-
-    rad_df2 <- rad_df / 20
-
-    #rad_df2 <- rad_df / 10
+    # we divided by 20 because we thought we needed PAR - not the case!
+    #rad_df2 <- rad_df / 20
 
     climate_df2 <- cbind(climate_df, rad_df2)
 
@@ -104,9 +101,9 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
 
     # CHECK THE FUNCTION CALL IS CORRECT HERE!!!
 
-    result <- Calculate_3PG_80(climate_df2, full_comb_clean, cl = cl)
+    #result <- Calculate_3PG_80(climate_df2, full_comb_clean, cl = cl)
 
-    #result <- Calculate_3PG_TEST(climate_df2, full_comb_clean, cl = cl)
+    result <- Calculate_3PG_TEST(climate_df2, full_comb_clean, cl = cl)
 
     result_df <- bind_rows(result)
 

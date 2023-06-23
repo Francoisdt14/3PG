@@ -409,7 +409,7 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         site$soil_class <- 3 # Site factors will include data from other rasters
         site$asw_i <-999 #
         site$asw_min <- 0
-        site$asw_max <- 300
+        site$asw_max <- 150
 
         # simulation from and to!
         site$from <-paste(inputs.df[i,4],"-6", sep = "")
@@ -432,7 +432,7 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         if (inputs.df[i,5] == 3) {
             species$species <- "Black Spruce" # should be sub-alpine fir
         } else if (inputs.df[i,5] == 23) {
-            species$species <-"Lodgepole-r3PG"
+            species$species <-"Lodgepole-Pine-3"
         } else if (inputs.df[i,5] == 18) {
             species$species <-"Black Spruce"
         } else if (inputs.df[i,5] == 22) {
@@ -479,6 +479,9 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
 
         volume_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'volume', 5]
 
+        #Soil water end of July
+        f_sw_select <- out_3PG[out_3PG$date == '2019-07-31' & out_3PG$variable == 'f_sw', 5]
+
         out_3PG$year <- lubridate::year(out_3PG$date)
         # filter the data for the final year and the 'npp' variable
         final_year_npp <- out_3PG %>% filter(year == 2019 & variable == "npp")
@@ -492,6 +495,7 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
                           "biom_foliage" = biom_foliage_select,
                           "biom_root" = biom_root_select,
                           "volume" = volume_select,
+                          "soil_water" = f_sw_select,
                           "npp" = total_npp))
     }) %>% bind_rows()
 
