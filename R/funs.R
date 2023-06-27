@@ -409,7 +409,7 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         site$soil_class <- 3 # Site factors will include data from other rasters
         site$asw_i <-999 #
         site$asw_min <- 0
-        site$asw_max <- 150
+        site$asw_max <- 300
 
         # simulation from and to!
         site$from <-paste(inputs.df[i,4],"-6", sep = "")
@@ -475,12 +475,15 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
 
         biom_stem_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_stem', 5]
         biom_foliage_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_foliage', 5]
-        biom_root_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_root', 5]
+        #biom_root_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'biom_root', 5]
 
         volume_select <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'volume', 5]
 
         #Soil water end of July
-        f_sw_select <- out_3PG[out_3PG$date == '2019-07-31' & out_3PG$variable == 'f_sw', 5]
+        f_sw_jul <- out_3PG[out_3PG$date == '2019-07-31' & out_3PG$variable == 'f_sw', 5]
+        f_sw_aug <- out_3PG[out_3PG$date == '2019-08-31' & out_3PG$variable == 'f_sw', 5]
+        f_sw_sep <- out_3PG[out_3PG$date == '2019-09-31' & out_3PG$variable == 'f_sw', 5]
+        f_sw_oct <- out_3PG[out_3PG$date == '2019-10-31' & out_3PG$variable == 'f_sw', 5]
 
         out_3PG$year <- lubridate::year(out_3PG$date)
         # filter the data for the final year and the 'npp' variable
@@ -493,9 +496,12 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
                           "basal_area" = basal_select,
                           "biom_stem" = biom_stem_select,
                           "biom_foliage" = biom_foliage_select,
-                          "biom_root" = biom_root_select,
+                          #"biom_root" = biom_root_select,
                           "volume" = volume_select,
-                          "soil_water" = f_sw_select,
+                          "f_sw_jul" = f_sw_jul,
+                          "f_sw_aug" = f_sw_aug,
+                          "f_sw_sep" = f_sw_sep,
+                          "f_sw_oct" = f_sw_oct,
                           "npp" = total_npp))
     }) %>% bind_rows()
 

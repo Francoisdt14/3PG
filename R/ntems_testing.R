@@ -4,6 +4,12 @@ library(ggplot2)
 library(dplyr)
 library(gridExtra)
 
+df889 <- read.csv("D:/BP_Layers/outputs/crops/889_test/889.csv")
+
+df889$biom_full <- df889$biom_stem + df889$biom_foliage
+write.csv(df889, "D:/BP_Layers/outputs/crops/889_test/889.csv")
+
+
 # Loop to create rasters from dataframes
 ################################# 
 # Loop through folders to make our rasters
@@ -12,13 +18,13 @@ mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # This is the folder where we saved our 3PG outputs
-csv_folder <- "D:/BP_Layers/outputs/crops/RAD_TEST/r_lodge"
+csv_folder <- "D:/BP_Layers/outputs/crops/889_test"
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = csv_folder, pattern = "*.csv")
 
 #Need to decide which raster we want to produce - keyword is from the outputs of the 3PG function
-keyword <- "biom_full"
+keyword <- "lai"
 
 # where are things saved?
 #target_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters_full_rad/", keyword)
@@ -112,8 +118,9 @@ orig_lp889_b <- rast("D:/BP_Layers/outputs/crops/RAD_TEST/original_lodge/biom_fu
 orig_lp_half889_b <- rast("D:/BP_Layers/outputs/crops/RAD_TEST/original_lodge_half_rad/biom_full889.tif")
 r_lp889_b <- rast("D:/BP_Layers/outputs/crops/RAD_TEST/r_lodge/biom_full889.tif")
 
-#test <- rast("D:/BP_Layers/outputs/crops/RAD_TEST/r_lodge/biom_full889.tif")
-#test[!mask889] <- NA
+
+test <- rast("D:/BP_Layers/outputs/crops/889_test/soil_water889.tif")
+test[!mask889] <- NA
 
 new_lp892_b <- rast("D:/BP_Layers/outputs/crops/RAD_TEST/new_lodge/biom_full892.tif")
 orig_lp892_b <- rast("D:/BP_Layers/outputs/crops/RAD_TEST/original_lodge/biom_full892.tif")
@@ -185,7 +192,7 @@ global(biomass892, "notNA")
 
 global(biomass889, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
 global(orig_lp889_b, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
-global(r_lp889_b, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
+global(test, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
 
 # LOOK AT SUMMARY STATISTICS OF THE DATA
 stacked_889 <- c(biomass889, orig_lp889_b, new_lp889_b, orig_lp_half889_b, r_lp889_b)
@@ -211,6 +218,15 @@ colnames(df_bio892)[2] <- "orig_lp"
 colnames(df_bio892)[3] <- "new_lp"
 colnames(df_bio892)[4] <- "orig_lp_half"
 colnames(df_bio892)[5] <- "r_lp"
+
+
+# Set up the plot window to have three columns
+par(mfrow = c(2, 2))
+
+plot(biomass889, col =viridis(100), main="NTEMS Biomass")
+plot(orig_lp889_b, col =viridis(100), main="Original, Double Radiation")
+plot(new_lp889_b, col =viridis(100), main="New Parameterization of 3PG Biomass")
+plot(r_lp889_b, col =viridis(100), main="Meyer et al. 2013 Parameters")
 
 
 # Quick summary - NTEMS here
@@ -336,6 +352,9 @@ rownames(summary_df892) <- c("orig_lp", "new_lp", "orig_lp_half", "r_lp", "NTEMS
 summary_df889_t <- t(summary_df889)
 summary_df892_t <- t(summary_df892)
 
+summary_df892_table <- summary_df892_t
+
+colnames(summary_df892_table) <- c("Original Double Rad", "New Param", "Original Half Rad", "Meyer et al. 2013", "NTEMS")
 
 df_long889 <- df_bio889 %>%
   pivot_longer(cols = everything(), names_to = "Column Heading", values_to = "Value")
@@ -347,6 +366,19 @@ df_long892 <- df_bio892 %>%
 my_palette <- c("#355EAF", "#005F58", "#0FA100", "#FFBB39", "#FF6F00")
 
 # Plot the density using the long format dataframe
+
+# Define custom legend labels
+my_labels <- c("New Param", "NTEMS", "Original Double Rad", "Original Half Rad", "Meyer et al. 2013")
+
+# Plot the density using the long format dataframe
+ggplot(df_long892, aes(x = Value, color = `Column Heading`)) +
+  geom_density(size = 0.75) +
+  labs(x = "Value", y = "Density") +
+  scale_color_manual(values = my_palette, name = "Column Heading", labels = my_labels) +
+  theme_pt() +
+  ylim(0, 0.1)
+
+
 ggplot(df_long892, aes(x = Value, color = `Column Heading`)) +
   geom_density(size = 0.75) +  # Adjust line size
   labs(x = "Value", y = "Density") +
@@ -415,7 +447,7 @@ ntems_range <- range(df_sample$NTEMS)
 plot_orig_lp <- ggplot(df_sample, aes(x = NTEMS, y = orig_lp)) +
   geom_hex(bins = 100) +
   labs(x = "NTEMS", y = "orig_lp") +
-  ggtitle("orig_lp vs. NTEMS") +
+  ggtitle("NTEMS vs Original Double Rad") +
   scale_fill_viridis_c() +
   theme_minimal() +
   xlim(ntems_range) +
@@ -425,7 +457,7 @@ plot_orig_lp <- ggplot(df_sample, aes(x = NTEMS, y = orig_lp)) +
 plot_new_lp <- ggplot(df_sample, aes(x = NTEMS, y = new_lp)) +
   geom_hex(bins = 100) +
   labs(x = "NTEMS", y = "new_lp") +
-  ggtitle("new_lp vs. NTEMS") +
+  ggtitle("NTEMS vs New Param") +
   scale_fill_viridis_c() +
   theme_minimal() +
   xlim(ntems_range) +
@@ -435,7 +467,7 @@ plot_new_lp <- ggplot(df_sample, aes(x = NTEMS, y = new_lp)) +
 plot_orig_lp_half <- ggplot(df_sample, aes(x = NTEMS, y = orig_lp_half)) +
   geom_hex(bins = 100) +
   labs(x = "NTEMS", y = "orig_lp_half") +
-  ggtitle("orig_lp_half vs. NTEMS") +
+  ggtitle("NTEMS vs Original Half Rad") +
   scale_fill_viridis_c() +
   theme_minimal() +
   xlim(ntems_range) +
@@ -445,7 +477,7 @@ plot_orig_lp_half <- ggplot(df_sample, aes(x = NTEMS, y = orig_lp_half)) +
 plot_r_lp <- ggplot(df_sample, aes(x = NTEMS, y = r_lp)) +
   geom_hex(bins = 100) +
   labs(x = "NTEMS", y = "r_lp") +
-  ggtitle("r_lp vs. NTEMS") +
+  ggtitle("NTEMS vs. Meyer et al. 2013") +
   scale_fill_viridis_c() +
   theme_minimal() +
   xlim(ntems_range) +
@@ -453,7 +485,7 @@ plot_r_lp <- ggplot(df_sample, aes(x = NTEMS, y = r_lp)) +
   geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dotted", linewidth = 1)
 
 # Display the heat maps side by side
-grid.arrange(plot_orig_lp, plot_new_lp, plot_orig_lp_half, plot_r_lp, ncol = 2)
+grid.arrange(plot_orig_lp_half, plot_orig_lp, plot_new_lp, plot_r_lp, ncol = 2)
 
 
 correlation <- cor(df_bio$orig_lp, df_bio$NTEMS)
@@ -815,3 +847,29 @@ plot_r_lp <- ggplot(df_sample, aes(x = NTEMS, y = r_lp)) +
 grid.arrange(plot_orig_lp, plot_new_lp, plot_orig_lp_half, plot_r_lp, ncol = 2)
 
 
+
+###################################
+# Quick DEM/Hillshade
+
+
+# Species
+dem_full <- rast("D:/BP_Layers/outputs/inputs/dem_crop_M_9S.tif")
+
+# Crop species to correct boxes
+dem889 <- crop(dem_full, new_lp889_b)
+dem892 <- crop(dem_full, new_lp892_b)
+#plot(dem892)
+
+writeRaster(dem892, filename = "D:/BP_Layers/outputs/crops/892_test/dem892.tif")
+
+sl <- terrain(dem892, "slope", unit = "radians")
+asp <- terrain(dem892, "aspect", unit = "radians")
+
+hill_single <- shade(sl, asp, 
+                     angle = 45, 
+                     direction = 300,
+                     normalize= TRUE)
+# final hillshade 
+plot(hill_single, col = viridis(100))
+
+writeRaster(hill_single, filename = "D:/BP_Layers/outputs/crops/892_test/hill892.tif")

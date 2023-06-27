@@ -50,8 +50,8 @@ text(boxes.v, boxes.v$name)
 # Set file path for the folder containing the input rasters
 
 #folder_path <- "D:/BP_Layers/outputs/inputs"
-folder_path <- "D:/Radiation/30m_crop_align/M_nineS"
-#folder_path <- "D:/BP_Layers/outputs/climate"
+#folder_path <- "D:/Radiation/30m_crop_align/M_nineS"
+folder_path <- "D:/BP_Layers/outputs/climate"
 
 # vector polygons used for cropping = boxes.v from above!
 
@@ -61,11 +61,15 @@ raster_files <- list.files(folder_path, pattern = "*.tif$")
 # Define which boxes we want to do here:
 
 #vals <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
-vals <- c(574:585, 605:617)
+#vals <- c(574:585, 605:617)
+
+vals <- c(887:892)
+
 # Change this to check if the things are writing to the correct place
+
 #target_folder <- "D:/BP_Layers/outputs/crops/inputs2"
-target_folder <- "D:/BP_Layers/outputs/crops/rad"
-#target_folder <- "D:/BP_Layers/outputs/crops/climate"
+#target_folder <- "D:/BP_Layers/outputs/crops/rad"
+target_folder <- "D:/BP_Layers/outputs/crops/climate"
 
 
 # Loop through the vector polygons and crop the rasters - here we are cropping just boxes 32:34...

@@ -44,7 +44,9 @@ boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 target_folder <- "D:/BP_Layers/outputs/crops/lat"
 
 #box.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
-box.numb <- c(574:585, 605:617)
+#box.numb <- c(574:585, 605:617)
+
+box.numb<- c(887:892)
 
 for (i in box.numb) {         #nrow(boxes.v)) {
 
@@ -88,7 +90,7 @@ for (i in box.numb) {         #nrow(boxes.v)) {
 
 
 ###############################################################################
-
+# OLD
 
 #mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 lat.mask = crop(mask_crop, polygon)

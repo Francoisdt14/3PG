@@ -32,7 +32,7 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # Make sure we are sending this to the correct folder!
-output_folder <- "D:/BP_Layers/outputs/crops/892"
+output_folder <- "D:/BP_Layers/outputs/crops/889_test/300"
 
 # 25 square 5 x 5
 #tile.numb <- c(392:396, 423:427, 454:458, 485:489, 516:520)
@@ -43,7 +43,7 @@ output_folder <- "D:/BP_Layers/outputs/crops/892"
 # 121 square (11 x 11)
 #tile.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
 
-tile.numb <- c(889, 892)
+tile.numb <- 889
 
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
