@@ -409,7 +409,8 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         site$soil_class <- 3 # Site factors will include data from other rasters
         site$asw_i <-999 #
         site$asw_min <- 0
-        site$asw_max <- 300
+        #site$asw_max <- 100
+        site$asw_max <- inputs.df[i,6] # varying by the random raster we created
 
         # simulation from and to!
         site$from <-paste(inputs.df[i,4],"-6", sep = "")
@@ -449,11 +450,18 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         #### set it to 50 years here
         #species$planted <- '1969-12' ###
 
-        species$fertility <- 0.7 # should come from soil - generally low fertility from literature
+        #species$fertility <- 0.5 # should come from soil - generally low fertility from literature
+        species$fertility <- inputs.df[i,7]
         species$stems_n <- 4000 # literature
         species$biom_stem <- 6 # literature
         species$biom_root <- 3 # literature
         species$biom_foliage <- 1 # literature
+
+        ############################################################
+        # Change the alphaCx value in parameters..
+
+        row_index <- which(parameters$parameter == "alphaCx")
+        parameters[row_index, "Lodgepole-Pine-3"] <- (0.025 * species[1, "fertility"]) + 0.03
 
         ############################################################
         # MAIN FUNCTION
@@ -482,8 +490,11 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         #Soil water end of July
         f_sw_jul <- out_3PG[out_3PG$date == '2019-07-31' & out_3PG$variable == 'f_sw', 5]
         f_sw_aug <- out_3PG[out_3PG$date == '2019-08-31' & out_3PG$variable == 'f_sw', 5]
-        f_sw_sep <- out_3PG[out_3PG$date == '2019-09-31' & out_3PG$variable == 'f_sw', 5]
+        f_sw_sep <- out_3PG[out_3PG$date == '2019-09-30' & out_3PG$variable == 'f_sw', 5]
         f_sw_oct <- out_3PG[out_3PG$date == '2019-10-31' & out_3PG$variable == 'f_sw', 5]
+
+        # Nutrition dependent modifier
+        f_nutr <- out_3PG[out_3PG$date == '2019-12-31' & out_3PG$variable == 'f_nutr', 5]
 
         out_3PG$year <- lubridate::year(out_3PG$date)
         # filter the data for the final year and the 'npp' variable
@@ -496,12 +507,14 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
                           "basal_area" = basal_select,
                           "biom_stem" = biom_stem_select,
                           "biom_foliage" = biom_foliage_select,
+                          "biom_full" = biom_stem_select + biom_foliage_select,
                           #"biom_root" = biom_root_select,
                           "volume" = volume_select,
                           "f_sw_jul" = f_sw_jul,
                           "f_sw_aug" = f_sw_aug,
                           "f_sw_sep" = f_sw_sep,
                           "f_sw_oct" = f_sw_oct,
+                          "f_nutr" = f_nutr,
                           "npp" = total_npp))
     }) %>% bind_rows()
 

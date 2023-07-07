@@ -32,7 +32,7 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # Make sure we are sending this to the correct folder!
-output_folder <- "D:/BP_Layers/outputs/crops/889_test/fert_05"
+output_folder <- "D:/BP_Layers/outputs/crops/889_test/varied/alpha"
 
 # 25 square 5 x 5
 #tile.numb <- c(392:396, 423:427, 454:458, 485:489, 516:520)
@@ -67,6 +67,11 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
     inputs_full <- select(inputs_full, -leading.species_2019)
     full_comb <- cbind(lat_full, inputs_full)
 
+    # here we read the random raster for fertility and max_asw
+    fert_asw <- read.csv("D:/BP_Layers/outputs/crops/889_test/varied/inputs3.csv")
+
+    full_comb <- cbind(full_comb, fert_asw)
+
     #dim(full_comb)
     #round the forest age?
     full_comb$Forest_Age_2019 <- ifelse(rowSums(is.na(full_comb)) == 1 & is.na(full_comb$Forest_Age_2019), 2019, full_comb$Forest_Age_2019)
@@ -76,7 +81,7 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
     full_comb_clean$focal_mean <- round(full_comb_clean$focal_mean, 3)
     full_comb_clean$dem_crop_M_9S <- round(full_comb_clean$dem_crop_M_9S)
     full_comb_clean$Forest_Age_2019 <- ifelse(full_comb_clean$Forest_Age_2019 < 1869, 1869, full_comb_clean$Forest_Age_2019)
-    colnames(full_comb_clean) <- c("lat", "dem", "disturbance", "age", "species")
+    colnames(full_comb_clean) <- c("lat", "dem", "disturbance", "age", "species", "max_asw", "fert")
 
     climate_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/climate/",i,".csv")) %>% na.omit()
     rad_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/rad/",i,".csv")) %>% na.omit()

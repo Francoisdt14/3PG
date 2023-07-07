@@ -4,10 +4,13 @@ library(ggplot2)
 library(dplyr)
 library(gridExtra)
 
-df889 <- read.csv("D:/BP_Layers/outputs/crops/889_test/300/889.csv")
+df889 <- read.csv("D:/BP_Layers/outputs/crops/889_test/varied/889.csv")
+
+
 
 df889$biom_full <- df889$biom_stem + df889$biom_foliage
-write.csv(df889, "D:/BP_Layers/outputs/crops/889_test/889.csv")
+
+write.csv(df889, "D:/BP_Layers/outputs/crops/889_test/varied/889_full.csv")
 
 
 # Loop to create rasters from dataframes
@@ -18,7 +21,7 @@ mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # This is the folder where we saved our 3PG outputs
-csv_folder <- "D:/BP_Layers/outputs/crops/889_test/300"
+csv_folder <- "D:/BP_Layers/outputs/crops/889_test/varied/alpha/asw_150"
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = csv_folder, pattern = "*.csv")
@@ -33,13 +36,21 @@ target_folder <- csv_folder
 #keyword <- "fsw_jul"
 
 # List of keywords
-keywords <- c("f_sw_jul", "f_sw_aug", "f_sw_sep", "f_sw_oct")
+keywords <- c("f_sw_jul", "f_sw_aug", "f_sw_sep", "f_sw_oct", "f_nutr", "biom_full", "dbh", "basal_area", "npp", "volume")
 
 # Loop through each keyword
 for (keyword in keywords) {
 
 # Loop through each CSV file
-for (file in csv_files) {
+for (i in seq_along(csv_files)) {
+
+  file <- csv_files[i]
+  
+  # Skip all files except the second file - if we want to do all the files don't change this!
+  if (i != 1) {
+    next  # move to next iteration of the loop
+  }
+  
   
   csv_name <- gsub(".csv", "", file)
   filename <- paste0(keyword,csv_name,".tif") # check ----
@@ -153,7 +164,7 @@ global(biomass892, "notNA")
 # Quick stats
 
 global(biomass889, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
-global(fsw_300_aug, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
+global(fsw_150_aug, c("mean", "max", "min", "sd", "rms"), na.rm=TRUE)
 
 
 # LOOK AT SUMMARY STATISTICS OF THE DATA
@@ -188,169 +199,57 @@ plot(stacked_fsw[[12]], main = names(stacked_fsw)[12], col =viridis(100))
 
 par(mfrow=c(1,1))
 
-
+######################################################################
 df_fsw889 <- as.data.frame(stacked_fsw)
 
-colnames(df_bio889)[1] <- "NTEMS"
-colnames(df_bio889)[2] <- "orig_lp"
-colnames(df_bio889)[3] <- "new_lp"
-colnames(df_bio889)[4] <- "orig_lp_half"
-colnames(df_bio889)[5] <- "r_lp"
-
-stacked_892 <- c(biomass892, orig_lp892_b, new_lp892_b, orig_lp_half892_b, r_lp892_b)
-
-plot(stacked_892, col =viridis(100))
-
-df_bio892 <- as.data.frame(stacked_892)
-
-colnames(df_bio892)[1] <- "NTEMS"
-colnames(df_bio892)[2] <- "orig_lp"
-colnames(df_bio892)[3] <- "new_lp"
-colnames(df_bio892)[4] <- "orig_lp_half"
-colnames(df_bio892)[5] <- "r_lp"
-
-
-# Set up the plot window to have three columns
-par(mfrow = c(2, 2))
-
-plot(biomass889, col =viridis(100), main="NTEMS Biomass")
-plot(orig_lp889_b, col =viridis(100), main="Original, Double Radiation")
-plot(new_lp889_b, col =viridis(100), main="New Parameterization of 3PG Biomass")
-plot(r_lp889_b, col =viridis(100), main="Meyer et al. 2013 Parameters")
-
-
-# Quick summary - NTEMS here
-sum <- df_bio892 %>%
-  summarize(
-    mean = mean(NTEMS),
-    min = min(NTEMS),
-    max = max(NTEMS),
-    sd = sd(NTEMS),
-    median = median(NTEMS),
-    quartile_25 = quantile(NTEMS, 0.25),
-    quartile_75 = quantile(NTEMS, 0.75)
-  )
-
 # Summarize the raster 889
-summary_df889 <- df_bio889 %>%
+summary_df889 <- df_fsw889 %>%
   summarize(
-    mean = mean(orig_lp),
-    min = min(orig_lp),
-    max = max(orig_lp),
-    sd = sd(orig_lp),
-    median = median(orig_lp),
-    quartile_25 = quantile(orig_lp, 0.25),
-    quartile_75 = quantile(orig_lp, 0.75)
+    mean = mean(fsw_100_sep),
+    min = min(fsw_100_sep),
+    max = max(fsw_100_sep),
+    sd = sd(fsw_100_sep),
+    median = median(fsw_100_sep),
+    quartile_25 = quantile(fsw_100_sep, 0.25),
+    quartile_75 = quantile(fsw_100_sep, 0.75)
   ) %>%
-  bind_rows(df_bio889 %>%
+  bind_rows(df_fsw889 %>%
               summarize(
-                mean = mean(new_lp),
-                min = min(new_lp),
-                max = max(new_lp),
-                sd = sd(new_lp),
-                median = median(new_lp),
-                quartile_25 = quantile(new_lp, 0.25),
-                quartile_75 = quantile(new_lp, 0.75)
+                mean = mean(fsw_150_sep),
+                min = min(fsw_150_sep),
+                max = max(fsw_150_sep),
+                sd = sd(fsw_150_sep),
+                median = median(fsw_150_sep),
+                quartile_25 = quantile(fsw_150_sep, 0.25),
+                quartile_75 = quantile(fsw_150_sep, 0.75)
               )) %>%
-  bind_rows(df_bio889 %>%
+  bind_rows(df_fsw889 %>%
               summarize(
-                mean = mean(orig_lp_half),
-                min = min(orig_lp_half),
-                max = max(orig_lp_half),
-                sd = sd(orig_lp_half),
-                median = median(orig_lp_half),
-                quartile_25 = quantile(orig_lp_half, 0.25),
-                quartile_75 = quantile(orig_lp_half, 0.75)
-              )) %>%
-  bind_rows(df_bio889 %>%
-              summarize(
-                mean = mean(r_lp),
-                min = min(r_lp),
-                max = max(r_lp),
-                sd = sd(r_lp),
-                median = median(r_lp),
-                quartile_25 = quantile(r_lp, 0.25),
-                quartile_75 = quantile(r_lp, 0.75)
-              )) %>%
-  bind_rows(df_bio889 %>%
-              summarize(
-                mean = mean(NTEMS),
-                min = min(NTEMS),
-                max = max(NTEMS),
-                sd = sd(NTEMS),
-                median = median(NTEMS),
-                quartile_25 = quantile(NTEMS, 0.25),
-                quartile_75 = quantile(NTEMS, 0.75)
+                mean = mean(fsw_300_sep),
+                min = min(fsw_300_sep),
+                max = max(fsw_300_sep),
+                sd = sd(fsw_300_sep),
+                median = median(fsw_300_sep),
+                quartile_25 = quantile(fsw_300_sep, 0.25),
+                quartile_75 = quantile(fsw_300_sep, 0.75)
               ))
+ 
 
-# Summarize the raster 892
-summary_df892 <- df_bio892 %>%
-  summarize(
-    mean = mean(orig_lp),
-    min = min(orig_lp),
-    max = max(orig_lp),
-    sd = sd(orig_lp),
-    median = median(orig_lp),
-    quartile_25 = quantile(orig_lp, 0.25),
-    quartile_75 = quantile(orig_lp, 0.75)
-  ) %>%
-  bind_rows(df_bio892 %>%
-              summarize(
-                mean = mean(new_lp),
-                min = min(new_lp),
-                max = max(new_lp),
-                sd = sd(new_lp),
-                median = median(new_lp),
-                quartile_25 = quantile(new_lp, 0.25),
-                quartile_75 = quantile(new_lp, 0.75)
-              )) %>%
-  bind_rows(df_bio892 %>%
-              summarize(
-                mean = mean(orig_lp_half),
-                min = min(orig_lp_half),
-                max = max(orig_lp_half),
-                sd = sd(orig_lp_half),
-                median = median(orig_lp_half),
-                quartile_25 = quantile(orig_lp_half, 0.25),
-                quartile_75 = quantile(orig_lp_half, 0.75)
-              )) %>%
-  bind_rows(df_bio892 %>%
-              summarize(
-                mean = mean(r_lp),
-                min = min(r_lp),
-                max = max(r_lp),
-                sd = sd(r_lp),
-                median = median(r_lp),
-                quartile_25 = quantile(r_lp, 0.25),
-                quartile_75 = quantile(r_lp, 0.75)
-              )) %>%
-  bind_rows(df_bio892 %>%
-              summarize(
-                mean = mean(NTEMS),
-                min = min(NTEMS),
-                max = max(NTEMS),
-                sd = sd(NTEMS),
-                median = median(NTEMS),
-                quartile_25 = quantile(NTEMS, 0.25),
-                quartile_75 = quantile(NTEMS, 0.75)
-              ))
 
 # Set row names as the column headings
-rownames(summary_df889) <- c("orig_lp", "new_lp", "orig_lp_half", "r_lp", "NTEMS")
-rownames(summary_df892) <- c("orig_lp", "new_lp", "orig_lp_half", "r_lp", "NTEMS")
+rownames(summary_df889) <- c("fsw_100_sep", "fsw_150_sep", "fsw_300_sep")
+
 # Transpose the summary dataframe
 summary_df889_t <- t(summary_df889)
-summary_df892_t <- t(summary_df892)
 
-summary_df892_table <- summary_df892_t
+summary_df889_table <- summary_df889_t
 
-colnames(summary_df892_table) <- c("Original Double Rad", "New Param", "Original Half Rad", "Meyer et al. 2013", "NTEMS")
-
-df_long889 <- df_bio889 %>%
+df_long889 <- df_fsw889 %>%
   pivot_longer(cols = everything(), names_to = "Column Heading", values_to = "Value")
+###########################
 
-df_long892 <- df_bio892 %>%
-  pivot_longer(cols = everything(), names_to = "Column Heading", values_to = "Value")
+
+
 
 # Define a custom color palette
 my_palette <- c("#355EAF", "#005F58", "#0FA100", "#FFBB39", "#FF6F00")

@@ -141,9 +141,43 @@ par(mfrow=c(1,1))
 # Species
 species <- rast("D:/BP_Layers/outputs/inputs/leading-species_2019_2.tif")
 
+# Define a vector of 9 mixed colors
+colors <- c("#FF0000",  # Red
+            "#00FF00",  # Green
+            "#0000FF",  # Blue
+            "#FFFF00",  # Yellow
+            "#00FFFF",  # Cyan
+            "#FF00FF",  # Magenta
+            "#800080",  # Purple
+            "#FFA500",  # Orange
+            "#008000")  # Dark Green
+
+breaks2 <- c(0, 3, 16, 17, 18, 23, 29, 35, 36)
+
+# Plot the raster with the diverging color scheme
+plot(species, col = colors, breaks = breaks2, legend = FALSE, main = "Leading Species")
+
+dem <- rast("D:/BP_Layers/outputs/inputs/dem_crop_M_9S.tif")
+plot(dem, main = "Elevation (m)")
+
+temp <- rast("D:/BP_Layers/outputs/climate/Tmax08.tif")
+
+# Set the number of colors for the color ramp
+num_colors <- 100
+# Create a vector of colors using the color ramp from blue to red
+colors <- colorRampPalette(c("blue", "red"))(num_colors)
+
+plot(temp, main = "Maximum August Temperature (C)", col = colors)
+
+
+
 # Crop species to correct boxes
 species889 <- crop(species, new_lp889_b)
 species892 <- crop(species, new_lp892_b)
+
+age <- rast("D:/BP_Layers/outputs/inputs/Forest_Age_2019.tif")
+age889 <- crop(age, new_lp889_b)
+
 
 # NTEMS BIOMASS
 biomass_ntems_full <- rast("D:/BP_Layers/outputs/crops/ntems_rasters/biomass_ntems_full.tif")
