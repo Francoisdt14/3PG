@@ -5,8 +5,8 @@ source("R/lib.R")
 # Rasters that currently need to be aligned and re-cropped:
 #   climate rasters
 #   DEM (elevation)
-#   Species raster (eventually used for different species inputs)
-#   Disturbance (stand initiation)
+#   Species raster (eventually used for different species inputs) - use loop at the bottom!
+#   Forest Age (stand initiation)
 
 # List of the input rasters that we are masking and aligning
 
@@ -55,6 +55,8 @@ global(mask_crop, "notNA")
 global(rast_m, "notNA")
 
 
+####################################
+# USE THIS FOR SPECIES
 ####################################
 # Original loop before writing as a function...
 # Initially manually did DEM, Species, and Disturbance rasters using this loop:

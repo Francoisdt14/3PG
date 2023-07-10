@@ -409,8 +409,8 @@ Calculate_3PG_TEST <- function(climate.df, inputs.df, cl = NA) {
         site$soil_class <- 3 # Site factors will include data from other rasters
         site$asw_i <-999 #
         site$asw_min <- 0
-        #site$asw_max <- 100
-        site$asw_max <- inputs.df[i,6] # varying by the random raster we created
+        site$asw_max <- 150
+        #site$asw_max <- inputs.df[i,6] # varying by the random raster we created
 
         # simulation from and to!
         site$from <-paste(inputs.df[i,4],"-6", sep = "")

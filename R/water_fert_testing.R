@@ -7,15 +7,7 @@ library(gridExtra)
 df889 <- read.csv("D:/BP_Layers/outputs/crops/889_test/varied/889.csv")
 
 
-
-df889$biom_full <- df889$biom_stem + df889$biom_foliage
-
-write.csv(df889, "D:/BP_Layers/outputs/crops/889_test/varied/889_full.csv")
-
-
-# Loop to create rasters from dataframes
-################################# 
-# Loop through folders to make our rasters
+# Loop through folders to make our rasters for display
 
 mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")

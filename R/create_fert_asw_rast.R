@@ -1,7 +1,7 @@
 library(terra)
 
 # Load the template raster
-template_raster <- rast("D:/BP_Layers/outputs/crops/889_test/100/f_sw_jul889.tif")
+template_raster <- rast("D:/BP_Layers/outputs/crops/892_test/basal_area892.tif")
 
 # Set the random seed for reproducibility
 set.seed(123)
@@ -46,7 +46,7 @@ print(counts_df)
 max(counts_df$count)
 
 
-write.csv(inputs3, file = "D:/BP_Layers/outputs/crops/889_test/varied/inputs3.csv", row.names = FALSE)
+write.csv(inputs3, file = "D:/BP_Layers/outputs/crops/892_test/inputs3.csv", row.names = FALSE)
 
 
 
@@ -347,7 +347,7 @@ density_plot4 <- ggplot(df_889_varied) +
 
 
 # Display the density plot
-print(density_plot3)
+print(density_plot4)
 
 
 
