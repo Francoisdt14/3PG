@@ -29,10 +29,12 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 # Use .rds because it saves space
 #climate_df <- readRDS("./data/input/climate_033.rds") %>% na.omit()
 #inputs_df <- readRDS("./data/input/inputs_033.rds") %>% na.omit()
-boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+boxes.v <- vect("D:/BP_Layers/M_18S/boxes.shp")
 
 # Make sure we are sending this to the correct folder!
-output_folder <- "D:/BP_Layers/outputs/crops/889_test/fert_05"
+#output_folder <- "D:/BP_Layers/outputs/crops/889_test/fert_05"
+output_folder <- "D:/BP_Layers/M_18S/outputs/dataframes"
+
 
 # 25 square 5 x 5
 #tile.numb <- c(392:396, 423:427, 454:458, 485:489, 516:520)
@@ -43,7 +45,8 @@ output_folder <- "D:/BP_Layers/outputs/crops/889_test/fert_05"
 # 121 square (11 x 11)
 #tile.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
 
-tile.numb <- 889
+# tile for M_18S with biomass!
+tile.numb <- 833
 
 # cl = detectCores()/2 %>% makeCluster()
 cl = makeCluster(20) # number of cores
@@ -61,27 +64,31 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
         next  # move to next iteration of the loop
     }
 
-    lat_full <- read.csv(paste0("D:/BP_Layers/outputs/crops/lat/",i, ".csv"))
-    inputs_full <- read.csv(paste0("D:/BP_Layers/outputs/crops/inputs2/",i,".csv"))
+    lat_full <- read.csv(paste0("D:/BP_Layers/M_18S/crops/lat/",i, ".csv"))
+    inputs_full <- read.csv(paste0("D:/BP_Layers/M_18S/crops/inputs2/",i,".csv"))
 
-    inputs_full <- select(inputs_full, -leading.species_2019)
+    # MUST DOUBLE CHECK SPECIES INFO
+    #inputs_full <- select(inputs_full)
     full_comb <- cbind(lat_full, inputs_full)
 
     #dim(full_comb)
     #round the forest age?
-    full_comb$Forest_Age_2019 <- ifelse(rowSums(is.na(full_comb)) == 1 & is.na(full_comb$Forest_Age_2019), 2019, full_comb$Forest_Age_2019)
+    full_comb$Forest_Age_2019_18S <- ifelse(rowSums(is.na(full_comb)) == 1 & is.na(full_comb$Forest_Age_2019_18S), 2019, full_comb$Forest_Age_2019_18S)
 
+    # DOUBLE CHECK ORDER IS CORRECT HERE - names might change
     full_comb_clean <- full_comb %>% na.omit()
-    full_comb_clean$Forest_Age_2019 <- round(full_comb_clean$Forest_Age_2019)
+    full_comb_clean$Forest_Age_2019_18S <- round(full_comb_clean$Forest_Age_2019_18S)
     full_comb_clean$focal_mean <- round(full_comb_clean$focal_mean, 3)
-    full_comb_clean$dem_crop_M_9S <- round(full_comb_clean$dem_crop_M_9S)
-    full_comb_clean$Forest_Age_2019 <- ifelse(full_comb_clean$Forest_Age_2019 < 1869, 1869, full_comb_clean$Forest_Age_2019)
-    colnames(full_comb_clean) <- c("lat", "dem", "disturbance", "age", "species")
+    full_comb_clean$dem_crop_M_18S <- round(full_comb_clean$dem_crop_M_18S)
+    full_comb_clean$Forest_Age_2019_18S <- ifelse(full_comb_clean$Forest_Age_2019_18S < 1869, 1869, full_comb_clean$Forest_Age_2019_18S)
+    colnames(full_comb_clean) <- c("lat", "dem", "age", "species")
 
-    climate_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/climate/",i,".csv")) %>% na.omit()
-    rad_df <- read.csv(paste0("D:/BP_Layers/outputs/crops/rad/",i,".csv")) %>% na.omit()
+    climate_df <- read.csv(paste0("D:/BP_Layers/M_18S/crops/climate/",i,".csv")) %>% na.omit()
+    rad_df <- read.csv(paste0("D:/BP_Layers/M_18S/crops/rad/",i,".csv")) %>% na.omit()
     # Need to change radiation names, divide by 10, and then divide by 2, and cbind the radiation data..
-    colnames(rad_df) <- c("Rad01", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09", "Rad10", "Rad11", "Rad12")
+    colnames(rad_df) <- c("Rad01", "Rad10", "Rad11", "Rad12", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09")
+    # Put the columns in the correct order:
+    rad_df <- rad_df[, c("Rad01", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09", "Rad10", "Rad11", "Rad12")]
 
     # Divide all values by 10 - the scale factor is 0.1
     rad_df2 <- rad_df / 10

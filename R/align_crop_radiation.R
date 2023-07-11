@@ -1,6 +1,6 @@
 # Lots of rasters created.. need to make sure everything is aligned, masked, and cropped correctly
 
-# THIS IS TAKEN DIRECTLY FROM 4_align_crop
+# THIS IS TAKEN DIRECTLY FROM 4_align_crop - slight changes
 
 source("R/lib.R")
 
@@ -15,26 +15,12 @@ source("R/lib.R")
 # List files here for radiation and disturbance - should be 12 rad, 1 disturbance
 #fl = list.files("D:/BP_Layers/M_9S/climate/tmax", full.names = T, pattern = ".tif$")
 
-fl = list.files("D:/BP_Layers/M_9S/species", full.names = T, pattern = ".dat$")
-
-test <- rast(fl[1])
-#raster <- fl[1]
-plot(test)
-
-species <- rast("D:/BP_Layers/outputs/inputs/leading-species_2019.tif")
-age <- rast("D:/BP_Layers/outputs/inputs/Forest_Age_2019.tif")
-mask <- rast("D:/BP_Layers/outputs/tree_mask.tif")
-
-global(species, "notNA")
-global(age, "notNA")
-global(mask, "notNA")
-
-
+fl = list.files("D:/Radiation/30m_crop_align/proj_test", full.names = T, pattern = ".tif$")
 
 ### re-sample DEM to another raster that we are sure are correct, in this case we want everything aligned to our 'tree_mask' raster
 # MAKE SURE TO CHANGE OUTDIRECTORY!
-align_crop <- function(raster, mask = "D:/BP_Layers/outputs/tree_mask.tif", outdir = "D:/BP_Layers/outputs/inputs/",
-                    overwrite = TRUE, focal.fun = "mean"){
+align_crop <- function(raster, mask = "D:/BP_Layers/M_18S/tree_mask.tif", outdir = "D:/Radiation/30m_crop_align/M_eighteenS/",
+                       overwrite = TRUE, focal.fun = "mean"){
 
   # basename of output
   file.name <- tools::file_path_sans_ext(basename(raster))
@@ -43,7 +29,8 @@ align_crop <- function(raster, mask = "D:/BP_Layers/outputs/tree_mask.tif", outd
   mask <- terra::rast(mask)
 
   # load in - this is important to do!
-  r <- terra::rast(raster) %>% project("EPSG:32609")
+  r <- terra::rast(raster)
+  r2 <- terra::project(r, mask)
 
   # align ---- mask = mask_crop?
   ra <- resample(r, mask, method = "near")
@@ -72,52 +59,3 @@ furrr::future_walk(.x = fl, .f = align_crop)
 global(mask, "notNA")
 global(test, "notNA")
 
-
-####
-# different number of NA values..
-# Check if there are any NA values in each raster
-
-mask_na <- is.na(mask)
-
-n_true_NA <- sum(as.vector(mask_na))
-
-age_na <- is.na(test)
-
-n_true <- sum(as.vector(age_na))
-
-# Create a new raster to identify locations where mask has non-NA cells and test has NA cells
-na_diff <- age_na - mask_na
-
-na_diff2 <- mask_na - age_na
-
-
-plot(mask_not_na_and_test_na, col = c('grey', 'red'))
-
-plot(age_na & !mask_na, col = "green")
-
-####################################
-# Original loop before writing as a function...
-# Initially manually did DEM, Species, and Disturbance rasters using this loop:
-
-fl <- "D:/BP_Layers/M_9S/age/Forest_Age_2019.dat"
-
-for (i in 1:length(fl)) {
-
-    rast <- rast(fl[i]) %>% project("EPSG:32609")
-    #rast_a <- align_raster(iraster = rast, rtemplate = mask_crop)
-    rast_a <- resample(rast, mask_crop, method = "near")
-
-    rast_a = focal(rast_a, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
-
-    rast_m <- terra::crop(rast_a, mask_crop)
-    rast_m <- terra::mask(rast_m, mask_crop)
-
-    file.name <- basename(fl[i])
-    file.name <- gsub('.tif','',file.name)
-
-    #writeRaster(rast_m, "D:/BP_Layers/outputs/dem_crop_M_9S_test.tif")
-    writeRaster(rast_m, paste("D:/BP_Layers/outputs/climate_2/", file.name, ".tif", sep = ""), overwrite = T)
-
-}
-
-######################################################################################################################

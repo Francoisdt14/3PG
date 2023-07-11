@@ -7,14 +7,18 @@ source("R/lib.R")
 #   DEM (elevation)
 #   Species raster (eventually used for different species inputs) - use loop at the bottom!
 #   Forest Age (stand initiation)
+#   Radiation!
 
 # List of the input rasters that we are masking and aligning
 
-fl = list.files("D:/BP_Layers/M_9S/climate/tmax", full.names = T, pattern = ".tif$")
+#fl = list.files("D:/Radiation/30m_cropped/M_eighteenS", full.names = T, pattern = ".tif$")
+#fl = list.files("D:/Landcover/francois5/Study_Area_M_eighteenS/18S/age", full.names = T, pattern = ".dat$")
+#fl = list.files("D:/BP_Layers/M_18S/large_rasters", full.names = T, pattern = ".tif$")
 
+fl = list.files("D:/Landcover/francois3/projected/Study_Area_M_eighteenS/18S/species", full.names = T, pattern = ".dat$")
 ### re-sample DEM to another raster that we are sure are correct, in this case we want everything aligned to our 'tree_mask' raster
 
-align_crop <- function(raster, mask = "D:/BP_Layers/outputs/tree_mask.tif", outdir = "D:/BP_Layers/outputs/climate_2/",
+align_crop <- function(raster, mask = "D:/BP_Layers/M_18S/tree_mask.tif", outdir = "D:/BP_Layers/M_18S/inputs/",
                     overwrite = TRUE, focal.fun = "mean"){
 
   # basename of output
@@ -24,13 +28,16 @@ align_crop <- function(raster, mask = "D:/BP_Layers/outputs/tree_mask.tif", outd
   mask <- terra::rast(mask)
 
   # load in
-  r <- terra::rast(raster) %>% project("EPSG:32609")
+  r <- terra::rast(raster) %>% project("EPSG:32618")
 
   # align
-  ra <- resample(r, mask_crop, method = "near")
+  ra <- resample(r, mask, method = "near")
 
-  if(str_detect(raster, "species")){ra <-  focal(ra, w = 3, fun = "modal", na.policy = "only", na.rm = T, expand = T)}
-  else(ra <-  focal(ra, w = 3, fun = focal.fun, na.policy = "only", na.rm = T, expand = T))
+  if (str_detect(raster, "species")) {
+      ra <- focal(ra, w = 3, fun = "modal", na.policy = "only", na.rm = T, expand = T)
+  } else {
+      ra <- focal(ra, w = 3, fun = focal.fun, na.policy = "only", na.rm = T, expand = T)
+  }
 
   #mask
   rm <- terra::crop(ra, mask)
@@ -71,10 +78,10 @@ for (i in 1:length(fl)) {
     rast <- rast(fl[i])
     rast <- as.factor(rast)
     # try this ---
-    rast_p <- rast %>% project("EPSG:32609")
+    rast_p <- rast %>% project("EPSG:32618")
 
     #rast_a <- align_raster(iraster = rast, rtemplate = mask_crop)
-    rast_a <- resample(rast_p, mask_crop, method = "near")
+    rast_a <- resample(rast_p, mask, method = "near")
 
     #rast_b <- resample(rast, mask_crop, method = "near")
 
@@ -95,3 +102,9 @@ for (i in 1:length(fl)) {
 }
 
 ######################################################################################################################
+
+test <- rast("D:/Radiation/30m_cropped/M_eighteenS/NACID_rswd_mon_norm_1971to2000_si_hist_v1_1.tif")
+
+tic()
+test2 <- terra::project(test, "EPSG:32618", method = "near")
+toc()

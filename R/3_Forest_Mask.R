@@ -9,11 +9,12 @@ library(tidyverse); library(terra); library(data.table); library(silvR21); libra
 # folder of inputs: D:/BP_Layers/M_9S
 
 # study area shapefile
-study <- vect("D:/BP_Layers/M_9S/study_area_polygon/Study_Area_M_nineS.shp") %>% project("EPSG:32609")
+# MAKE SURE TO PROJECT TO CORRECT UTM ZONE
+study <- vect("D:/BP_Layers/study_areas/Study_Area_M_eighteenS.shp") %>% project("EPSG:32618")
 
 # Landcover - use this to create a mask for all other layers to be used in 3PG
 
-landcover <-  rast("D:/BP_Layers/M_9S/landcover/LC_Class_HMM_2021_v20_v20.dat") %>% project("EPSG:32609") #project raster
+landcover <-  rast("D:/Landcover/francois5/Study_Area_M_eighteenS/18S/VLCE2.0/LC_Class_HMM_18S_2021_v20_v20.dat") %>% project("EPSG:32618") #project raster to correct projection
 vlce <- read.csv("D:/BP_Layers/M_9S/vlce.csv") # numeric codes for the landcover types
 
 x <- droplevels(landcover) # get rid of un-necessary data
@@ -24,4 +25,4 @@ xnum[!is.na(xnum)] <- 1 # set the forested landcovers to 1
 #plot(xnum, col = "darkgreen")
 mask_crop <- terra::crop(xnum, study)
 
-#writeRaster(mask_crop, "D:/BP_Layers/outputs/tree_mask.tif", datatype = "INT2U", overwrite = T) # write this mask as it will be used moving forward!
+writeRaster(mask_crop, "D:/BP_Layers/M_18S/tree_mask.tif", datatype = "INT2U", overwrite = T) # write this mask as it will be used moving forward!

@@ -4,7 +4,9 @@ source("R/lib.R")
 
 # Masking - again, we are using the tree_mask!
 
-mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
+mask_crop <- rast("D:/BP_Layers/M_18S/tree_mask.tif")
+
+#mask_crop <- mask
 
 box.size = 10000 # How big do you want the boxes to be? in m
 
@@ -35,12 +37,13 @@ boxes = pbapply(box.ctrs, 1, FUN = function(r){
 # Vectorize the boxes
 boxes.v = vect(boxes)
 
-#writeVector(boxes.v, "D:/BP_Layers/outputs/boxes.shp")
+# WRITE THIS TO THE CORRECT LOCATION FOR THE STUDY AREA
+writeVector(boxes.v, "D:/BP_Layers/M_18S/boxes.shp")
 
-boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+boxes.v <- vect("D:/BP_Layers/M_18S/boxes.shp")
 
 #plot it to see what it looks like
-plot(mask_crop, ext = ext(boxes.v), col = "red")
+plot(mask, ext = ext(boxes.v), col = "red")
 #plot(rast_m, ext = ext(boxes.v))
 plot(boxes.v, add = T)
 text(boxes.v, boxes.v$name)
@@ -49,9 +52,9 @@ text(boxes.v, boxes.v$name)
 # have a loop where you go through each box and output a cropped raster from mask_crop
 # Set file path for the folder containing the input rasters
 
-#folder_path <- "D:/BP_Layers/outputs/inputs"
-#folder_path <- "D:/Radiation/30m_crop_align/M_nineS"
-folder_path <- "D:/BP_Layers/outputs/climate"
+#folder_path <- "D:/BP_Layers/M_18S/inputs"
+folder_path <- "D:/Radiation/30m_crop_align/M_eighteenS"
+#folder_path <- "D:/BP_Layers/M_18S/climate"
 
 # vector polygons used for cropping = boxes.v from above!
 
@@ -63,13 +66,13 @@ raster_files <- list.files(folder_path, pattern = "*.tif$")
 #vals <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
 #vals <- c(574:585, 605:617)
 
-vals <- c(887:892)
+vals <- c(801:803, 832:834, 863:864)
 
 # Change this to check if the things are writing to the correct place
 
-#target_folder <- "D:/BP_Layers/outputs/crops/inputs2"
-#target_folder <- "D:/BP_Layers/outputs/crops/rad"
-target_folder <- "D:/BP_Layers/outputs/crops/climate"
+#target_folder <- "D:/BP_Layers/M_18S/crops/inputs2"
+target_folder <- "D:/BP_Layers/M_18S/crops/rad"
+#target_folder <- "D:/BP_Layers/M_18S/crops/climate"
 
 
 # Loop through the vector polygons and crop the rasters - here we are cropping just boxes 32:34...

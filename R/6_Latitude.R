@@ -6,8 +6,9 @@ source("R/lib.R")
 
 # i = 44 to 46...
 
-mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
-boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+mask_crop <- rast("D:/BP_Layers/M_18S/tree_mask.tif")
+boxes.v <- vect("D:/BP_Layers/M_18S/boxes.shp")
+
 polygon <- boxes.v[i, ]
 
 #mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
@@ -39,14 +40,14 @@ lat <- center_spatial_lat[1,2]
 #### just set lat.mask to mask_crop and do the whole thing?
 #lat.mask <-
 
-boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+boxes.v <- vect("D:/BP_Layers/M_18S/boxes.shp")
 # Change this to check if the things are writing to the correct place
-target_folder <- "D:/BP_Layers/outputs/crops/lat"
+target_folder <- "D:/BP_Layers/M_18S/crops/lat"
 
 #box.numb <- c(296:306, 327:337, 358:368, 389:399, 420:430, 451:461, 482:492, 513:523, 544:554, 575:585, 606:616)
 #box.numb <- c(574:585, 605:617)
 
-box.numb<- c(887:892)
+box.numb<- c(801:803, 832:834, 863:864)
 
 for (i in box.numb) {         #nrow(boxes.v)) {
 
@@ -83,7 +84,7 @@ for (i in box.numb) {         #nrow(boxes.v)) {
     lat.test <- values(y.rast, xy = TRUE) %>% as.data.table()
 
     #write.csv(df_y_coordinate, file = "D:/BP_Layers/outputs/crops/lat/044.csv", row.names = FALSE)
-    write.csv(lat.test, file = paste0("D:/BP_Layers/outputs/crops/lat/", polygon$name, ".csv"), row.names = FALSE)
+    write.csv(lat.test, file = paste0(target_folder, "/", polygon$name, ".csv"), row.names = FALSE)
 
     rm(lat.test)
 }

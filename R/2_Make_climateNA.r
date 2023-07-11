@@ -22,7 +22,7 @@ tmpFiles(remove = T)
 ####################################################################
 
 # Make 1 km raster and associated CSV
-f.dem30 = "D:/climate/U_13N/dem_crop_U_13N.tif" # assume this is a 30m DEM
+f.dem30 = "D:/climate/M_18S/dem_crop_M_18S.tif" # assume this is a 30m DEM
 
 # load it in
 r <- rast(f.dem30) %>% aggregate(33.3) %>% project("epsg:4326") # epsg should be correct for study area
@@ -88,9 +88,9 @@ for(v in var.list){
 # Re-sample outputs to resolution of NTEMS layers (30m)
 # Select the files from the years you want
 
-fl = list.files("D:/climate/U_18S/output_tif_1km", full.names = T, pattern = ".tif$")
+fl = list.files("D:/climate/M_18S/output_tif_1km", full.names = T, pattern = ".tif$")
 
-num.valid = rast("D:/climate/U_18S/dem_crop_U_18S.tif") %>% global("notNA") %>% as.numeric()
+num.valid = rast("D:/climate/M_18S/dem_crop_M_18S.tif") %>% global("notNA") %>% as.numeric()
 
 for(f in fl){
   cat(paste0("\nOn ", which(fl == f), "/", length(fl)))
