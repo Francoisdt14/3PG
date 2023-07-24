@@ -83,7 +83,13 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
     full_comb_clean$Forest_Age_2019_18S <- ifelse(full_comb_clean$Forest_Age_2019_18S < 1869, 1869, full_comb_clean$Forest_Age_2019_18S)
     colnames(full_comb_clean) <- c("lat", "dem", "age", "species")
 
+    full_comb_clean$disturbance <- 0
+    full_comb_clean <- full_comb_clean[, c("lat", "dem", "disturbance", "age", "species")]
+
     climate_df <- read.csv(paste0("D:/BP_Layers/M_18S/crops/climate/",i,".csv")) %>% na.omit()
+    # Assuming your dataframe is called 'df'
+    colnames(climate_df) <- gsub("StudyArea_", "", colnames(climate_df))
+
     rad_df <- read.csv(paste0("D:/BP_Layers/M_18S/crops/rad/",i,".csv")) %>% na.omit()
     # Need to change radiation names, divide by 10, and then divide by 2, and cbind the radiation data..
     colnames(rad_df) <- c("Rad01", "Rad10", "Rad11", "Rad12", "Rad02", "Rad03", "Rad04", "Rad05", "Rad06", "Rad07", "Rad08", "Rad09")
@@ -110,7 +116,7 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
 
     #result <- Calculate_3PG_80(climate_df2, full_comb_clean, cl = cl)
 
-    result <- Calculate_3PG_TEST(climate_df2, full_comb_clean, cl = cl)
+    result <- Calculate_3PG(climate_df2, full_comb_clean, cl = cl)
 
     result_df <- bind_rows(result)
 

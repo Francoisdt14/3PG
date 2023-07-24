@@ -5,12 +5,11 @@ library(viridis)
 
 #################################
 # Loop through folders to make our rasters
-
-mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
-boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
+mask_crop <- rast("D:/BP_Layers/M_18S/tree_mask.tif")
+boxes.v <- vect("D:/BP_Layers/M_18S/boxes.shp")
 
 # This is the folder where we saved our 3PG outputs
-csv_folder <- "D:/BP_Layers/outputs/crops/dataframes_80yr"
+csv_folder <- "D:/BP_Layers/M_18S/outputs/dataframes"
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = csv_folder, pattern = "*.csv")
@@ -19,8 +18,11 @@ csv_files <- list.files(path = csv_folder, pattern = "*.csv")
 keyword <- "biom_stem"
 
 # where are things saved?
-target_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters_80yr/", keyword)
+target_folder <- paste0("D:/BP_Layers/M_18S/outputs/rasters/", keyword)
 
+if (!dir.exists(target_folder)) {
+    dir.create(target_folder, recursive = TRUE)
+}
 
 # Loop through each CSV file
 for (file in csv_files) {
@@ -63,7 +65,7 @@ for (file in csv_files) {
     #num.valid = global(r.id, "notNA") %>% as.numeric()
 
     # Read in output (NPP or whatever) -> change this to the relevant output
-    vals = df %>% pull(keyword)
+    vals = df %>% dplyr::pull(keyword)
 
     # This should be true
     #length(vals) == num.valid

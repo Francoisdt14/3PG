@@ -35,7 +35,7 @@ for (i in 1:nrow(inputs3)) {
   # Get the values from the current row
   max_asw_val <- inputs3$max_asw[i]
   fert_val <- inputs3$fert[i]
-  
+
   # Find the corresponding row in counts_df and increment the count
   counts_df[counts_df$max_asw == max_asw_val & counts_df$fert == fert_val, "count"] <- counts_df[counts_df$max_asw == max_asw_val & counts_df$fert == fert_val, "count"] + 1
 }
@@ -60,7 +60,7 @@ biomass_varied[!mask889] <- NA
 max_asw[!mask889] <- NA
 fert[!mask889] <- NA
 
-# this is where alpha is varied depending on fertilisation 
+# this is where alpha is varied depending on fertilisation
 biom_alpha <- rast("D:/BP_Layers/outputs/crops/889_test/varied/alpha/both_vary/biom_full889.tif")
 biom_alpha[!mask889] <- NA
 
@@ -212,7 +212,7 @@ summary_stats_test <- df_889_varied %>%
     max_biomass_3pg = max(biomass_3pg, na.rm = TRUE),
     kurtosis_biomass_3pg = kurtosis(biomass_3pg, na.rm = TRUE),
     skewness_biomass_3pg = skewness(biomass_3pg, na.rm = TRUE)
-    
+
   ) %>%
   ungroup()
 

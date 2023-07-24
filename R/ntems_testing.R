@@ -11,14 +11,14 @@ write.csv(df889, "D:/BP_Layers/outputs/crops/889_test/889.csv")
 
 
 # Loop to create rasters from dataframes
-################################# 
+#################################
 # Loop through folders to make our rasters
 
 mask_crop <- rast("D:/BP_Layers/outputs/tree_mask.tif")
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # This is the folder where we saved our 3PG outputs
-csv_folder <- "D:/BP_Layers/outputs/crops/889_test"
+csv_folder <- "D:/BP_Layers/outputs/crops/889_test/150"
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = csv_folder, pattern = "*.csv")
@@ -32,56 +32,56 @@ target_folder <- csv_folder
 
 # Loop through each CSV file
 for (file in csv_files) {
-  
+
   csv_name <- gsub(".csv", "", file)
   filename <- paste0(keyword,csv_name,".tif") # check ----
   filepath <- file.path(target_folder, filename)
-  
+
   if (file.exists(filepath)) {
     cat("Skipping file", filename, "because it already exists.\n")
     next  # move to next iteration of the loop
   }
-  
+
   # Read in the CSV file
   df <- read.csv(paste(csv_folder, file, sep = "/"))
-  
+
   # Extract the numbers from the file name
   num.box <- gsub("[^0-9]", "", file)
   num.box <- as.numeric(num.box)
-  
+
   # Perform your function using the extracted numbers
-  
+
   # Do something with the output
   # ...
   polygon <- boxes.v[boxes.v$name == num.box, ]
   mini.r <-  crop(mask_crop, polygon)
-  
+
   crs(mini.r) <- crs(mask_crop)
-  
+
   #n.pix = global(mini.r, "notNA") %>% as.numeric()
-  
+
   #r.id = mini.r
   #r.id[!is.na(r.id)] <- 1:n.pix #npp.df
   #plot(r.id)
-  
+
   #dt = values(r.id, na.rm = T) %>% as.data.table()
-  
+
   #r = rast()
   # How many valid pixels?
   #num.valid = global(r.id, "notNA") %>% as.numeric()
-  
+
   # Read in output (NPP or whatever) -> change this to the relevant output
   vals = df %>% pull(keyword)
-  
+
   # This should be true
   #length(vals) == num.valid
-  
+
   # Fill in the blank raster with the output pixels
   mini.r[!is.na(mini.r)] <- vals
-  
+
   # Add the number to the raster file name
   rast_name <- paste0(target_folder,"/",keyword, num.box, ".tif")
-  
+
   # Write the raster to disk
   terra::writeRaster(mini.r, filename = rast_name, overwrite=T)
   rm(mini.r)
@@ -89,7 +89,7 @@ for (file in csv_files) {
 
 
 # If we want to make and group tiles for larger rasters
-###################################### 
+######################################
 
 # combining groups of tiles :
 raster_folder <- paste0("D:/BP_Layers/outputs/crops/output_rasters_full_rad/", keyword)
@@ -417,7 +417,7 @@ ggplot(df_long892, aes(x = Value, color = `Column Heading`)) +
   geom_density(size = 0.75) +  # Adjust line size
   labs(x = "Value", y = "Density") +
   scale_color_manual(values = my_palette, name = "Column Heading") +  # Use custom color palette
-  theme_pt() + 
+  theme_pt() +
   ylim(0, 0.1) #+ # Set y-axis limit from 0 to 0.1
   #geom_label(aes(label = `Column Heading`), nudge_y = 0.005, color = "black", fontface = "bold", size = 3)
 
@@ -776,7 +776,7 @@ ggplot(df_long892, aes(x = Value, color = `Column Heading`)) +
   geom_density(size = 0.75) +  # Adjust line size
   labs(x = "Value", y = "Density") +
   scale_color_manual(values = my_palette, name = "Column Heading") +  # Use custom color palette
-  theme_pt() + 
+  theme_pt() +
   ylim(0, 0.1) #+ # Set y-axis limit from 0 to 0.1
 #geom_label(aes(label = `Column Heading`), nudge_y = 0.005, color = "black", fontface = "bold", size = 3)
 
@@ -899,11 +899,11 @@ writeRaster(dem892, filename = "D:/BP_Layers/outputs/crops/892_test/dem892.tif")
 sl <- terrain(dem892, "slope", unit = "radians")
 asp <- terrain(dem892, "aspect", unit = "radians")
 
-hill_single <- shade(sl, asp, 
-                     angle = 45, 
+hill_single <- shade(sl, asp,
+                     angle = 45,
                      direction = 300,
                      normalize= TRUE)
-# final hillshade 
+# final hillshade
 plot(hill_single, col = viridis(100))
 
 writeRaster(hill_single, filename = "D:/BP_Layers/outputs/crops/892_test/hill892.tif")
