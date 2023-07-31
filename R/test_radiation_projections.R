@@ -294,7 +294,6 @@ print(paste("Center Y:", center_y))
 # rewrite HDR files!
 
 library(stringr)
-library(tools)
 
 # Set the directory where the .hdr and .flt files are located
 
