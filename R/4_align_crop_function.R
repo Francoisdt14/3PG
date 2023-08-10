@@ -102,9 +102,3 @@ for (i in 1:length(fl)) {
 }
 
 ######################################################################################################################
-
-test <- rast("D:/Radiation/30m_cropped/M_eighteenS/NACID_rswd_mon_norm_1971to2000_si_hist_v1_1.tif")
-
-tic()
-test2 <- terra::project(test, "EPSG:32618", method = "near")
-toc()

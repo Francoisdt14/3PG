@@ -48,14 +48,17 @@ fwrite(csv, out, row.names = FALSE)
 
 # Run climateNA on the csv - this is where we actually run ClimateNA
 # ClimateNA information is available here: https://climatena.ca/
-f = out
+#f = out
+f = "D:/climate/M_9S/future_climate/dem_crop_M_9S.csv"
 
-setwd("D:/Climatena_v730")# Need to set the working directory to the correct location otherwise it crashes. We are using the 'silvR21' package here
+#setwd("D:/Climatena_v730")# Need to set the working directory to the correct location otherwise it crashes. We are using the 'silvR21' package here
+
+setwd("D:/climate/M_9S/future_climate")
 
 #hist30YClimateNA(f, '1991_2020', 'M', "D:/ClimateNA_v730/ClimateNA_v7.30.exe", outdir = "D:/climate/U_18S/output_monthly") # Change outdir if necessary
 
-projClimateNA(file, "M", "D:/ClimateNA_v730/ClimateNA_v7.30.exe", scen = "13GCM",
-                ssp = c("S1", "S2", "S3"), years = "Y_2", outdir = "D:/climate/M_9S/future_climate")
+projClimateNA(f, "M", "D:/climate/M_9S/future_climate/ClimateNA_v7.30.exe", scen = "13GCM",
+                ssp = c("S1", "S2", "S3"), years = "Y4")
 
 
 # NOTE: radiation values are only available until 2010 (per climateNA) - will get NAs after this. Since they don't change can use RAD values from earlier years
@@ -64,25 +67,27 @@ projClimateNA(file, "M", "D:/ClimateNA_v730/ClimateNA_v7.30.exe", scen = "13GCM"
 ####################################################################
 
 # Generate rasters for each variable in each year
-f = list.files("D:/climate/U_18S/output_monthly/", pattern = ".csv$", full.names = T, recursive = T) # CSV output from above
+f = list.files("D:/climate/M_9S/future_climate/dem_crop_M_9S/", pattern = ".csv$", full.names = T, recursive = T) # CSV output from above
 
- # Only do it for a few variables if you don't want to include all variables
-var.list = fread("D:/climate/U_18S/climateNA_vars_subset.csv", header  =F) %>% pull(V1)
+# Only do it for a few variables if you don't want to include all variables
+var.list = fread("D:/climate/M_9S/climateNA_vars_subset.csv", header  =F) %>% pull(V1)
 
 # Read in csv
-dt = fread(f[1]) %>% select(Latitude, Longitude, all_of(var.list))
+dt = fread(f[3]) %>% select(Latitude, Longitude, all_of(var.list))
 
 var.list = names(dt)[4:ncol(dt)] # subset out the lat long, etc
+
+r <- rast("D:/climate/M_9S/Study_Area_M_9S_1km.tif")
 
 for(v in var.list){
   print(v)
   pts = select(dt, Longitude, Latitude, all_of(v)) %>%
-        vect(geom = c("Longitude", "Latitude"), crs = "epsg:4326")
+        vect(geom = c("Longitude", "Latitude"), crs = "epsg:32609") # double check EPSG of UTM Zone 9!
 
   r2 = rasterize(pts, r, field = v)
 
   # Output the file
-  writeRaster(r2, paste0("D:/climate/U_18S/output_tif_1km/", "StudyArea", "_", v, ".tif"), overwrite = T)
+  writeRaster(r2, paste0("D:/climate/M_9S/future_climate/dem_crop_M_9S/output_tif_1km/ssp370/", v, ".tif"), overwrite = T)
   terra::tmpFiles(remove = T)
 }
 
@@ -92,15 +97,22 @@ for(v in var.list){
 # Re-sample outputs to resolution of NTEMS layers (30m)
 # Select the files from the years you want
 
-fl = list.files("D:/climate/M_18S/output_tif_1km", full.names = T, pattern = ".tif$")
+f.dem30 <- "D:/climate/M_9S/dem_crop_M_9S.tif"
 
-num.valid = rast("D:/climate/M_18S/dem_crop_M_18S.tif") %>% global("notNA") %>% as.numeric()
+fl = list.files("D:/climate/M_9S/future_climate/dem_crop_M_9S/output_tif_1km/ssp370", full.names = T, pattern = ".tif$")
+
+num.valid = rast("D:/climate/M_9S/dem_crop_M_9S.tif") %>% global("notNA") %>% as.numeric()
 
 for(f in fl){
   cat(paste0("\nOn ", which(fl == f), "/", length(fl)))
 
  # f = fl[1]
  f.out = str_replace(f, "output_tif_1km", "output_tif_30m")
+
+    if (file.exists(f.out)) {
+     cat(" -- file already exists")
+     next
+    }
 
   # Only run if you haven't before
   if(!file.exists(f.out)){
