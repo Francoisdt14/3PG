@@ -62,7 +62,7 @@ hist30YClimateNA(f, '1991_2020', 'M', "D:/ClimateNA_v730/ClimateNA_v7.30.exe", o
 # Generate rasters for each variable in each year
 f = list.files("D:/climate/U_18S/output_monthly/", pattern = ".csv$", full.names = T, recursive = T) # CSV output from above
 
- # Only do it for a few variables if you don't want to include all variables
+# Only do it for a few variables if you don't want to include all variables
 var.list = fread("D:/climate/U_18S/climateNA_vars_subset.csv", header  =F) %>% pull(V1)
 
 # Read in csv
@@ -71,15 +71,15 @@ dt = fread(f[1]) %>% select(Latitude, Longitude, all_of(var.list))
 var.list = names(dt)[4:ncol(dt)] # subset out the lat long, etc
 
 for(v in var.list){
-  print(v)
-  pts = select(dt, Longitude, Latitude, all_of(v)) %>%
+    print(v)
+    pts = select(dt, Longitude, Latitude, all_of(v)) %>%
         vect(geom = c("Longitude", "Latitude"), crs = "epsg:4326")
 
-  r2 = rasterize(pts, r, field = v)
+    r2 = rasterize(pts, r, field = v)
 
-  # Output the file
-  writeRaster(r2, paste0("D:/climate/U_18S/output_tif_1km/", "StudyArea", "_", v, ".tif"), overwrite = T)
-  terra::tmpFiles(remove = T)
+    # Output the file
+    writeRaster(r2, paste0("D:/climate/U_18S/output_tif_1km/", "StudyArea", "_", v, ".tif"), overwrite = T)
+    terra::tmpFiles(remove = T)
 }
 
 ####################################################################
@@ -93,33 +93,33 @@ fl = list.files("D:/climate/M_18S/output_tif_1km", full.names = T, pattern = ".t
 num.valid = rast("D:/climate/M_18S/dem_crop_M_18S.tif") %>% global("notNA") %>% as.numeric()
 
 for(f in fl){
-  cat(paste0("\nOn ", which(fl == f), "/", length(fl)))
+    cat(paste0("\nOn ", which(fl == f), "/", length(fl)))
 
- # f = fl[1]
- f.out = str_replace(f, "output_tif_1km", "output_tif_30m")
+    # f = fl[1]
+    f.out = str_replace(f, "output_tif_1km", "output_tif_30m")
 
-  # Only run if you haven't before
-  if(!file.exists(f.out)){
-      t1 = Sys.time()
-    # This should be the original 30m DEM
-    blank.r = rast(f.dem30)
+    # Only run if you haven't before
+    if(!file.exists(f.out)){
+        t1 = Sys.time()
+        # This should be the original 30m DEM
+        blank.r = rast(f.dem30)
 
-    r2 = rast(f) %>%
-         project(crs(blank.r)) %>%
-         focal(w = 5, fun = "mean", na.policy = "only", na.rm = T) %>%
-         resample(blank.r, method = "cubicspline") %>%
+        r2 = rast(f) %>%
+            project(crs(blank.r)) %>%
+            focal(w = 5, fun = "mean", na.policy = "only", na.rm = T) %>%
+            resample(blank.r, method = "cubicspline") %>%
 
-         mask(blank.r)
+            mask(blank.r)
 
-    n.current = global(r2, "notNA") %>% as.numeric()
+        n.current = global(r2, "notNA") %>% as.numeric()
 
-    if(n.current != num.valid){cat("-- not the same as target");next}
+        if(n.current != num.valid){cat("-- not the same as target");next}
 
-    writeRaster(r2, f.out, overwrite = T)
-    difftime(Sys.time(), t1, units = "secs") %>% as.numeric() %>% round(2) %>% paste0(" -- done in ", . , " seconds") %>% cat()
-  }
+        writeRaster(r2, f.out, overwrite = T)
+        difftime(Sys.time(), t1, units = "secs") %>% as.numeric() %>% round(2) %>% paste0(" -- done in ", . , " seconds") %>% cat()
+    }
 
-  terra::tmpFiles(remove = T)
+    terra::tmpFiles(remove = T)
 }
 
 ####
