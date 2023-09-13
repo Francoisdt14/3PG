@@ -108,17 +108,24 @@ terra::writeRaster(tree.age.clamp, paste(out.dir, file.name, ".tif", sep = ""), 
 
 
 ############
-# Align any layers to the tree.mask
+# Align any layers to the tree.mask - in the case of M_18S it looks like the files are already aligned!
 
 #this is what every single raster is aligned to
 #tree.mask <- rast("D:/BP_Layers/M_18S/tree_mask.tif")
 
+#this is what every single raster is aligned to
+tree.mask <- rast("D:/BP_Layers/M_18S/tree_mask.tif")
+# need to fill the NA's so that we can make sure we have full climate layers!
+tree.mask[is.na(tree.mask)] <- 1
+
+scen  <- "Y2_S1"
+
 #folder with data
-fl <- ("D:/BP_Layers/M_18S/climate")
+fl <- paste0("D:/climate/Future/M_18S/tif_30m/", scen)
 #list of files in folder
 input.files <- list.files(fl, pattern = ".tif$", full.names = TRUE)
 #output folder
-out.dir <- ("D:/BP_Layers/M_18S/3PG_flt/2_climate_align/") # don't forget the forward /
+out.dir <- paste0("D:/BP_Layers/M_9S/3PG_flt/2_future_climate_align/", scen, "/") # don't forget the forward /
 
 # Loop through each raster input
 for (i in 1:length(input.files)) {
@@ -149,13 +156,17 @@ for (i in 1:length(input.files)) {
 
 # frost free days
 
+scen  <- "Y5_S3"
 
-fp <- "D:/BP_Layers/M_18S/3PG_flt/2_climate_align"
+#folder with data
+fp <- paste0("D:/climate/Future/M_18S/tif_30m/", scen)
+#list of files in folder
 tiffs <- list.files(fp, pattern = ".tif$", full.names = TRUE, recursive = TRUE)
 
-# Create a new folder to save the processed rasters
-output_folder <- "D:/BP_Layers/M_18S/3PG_flt/3_frost"
+#output folder
+output_folder <- paste0("D:/BP_Layers/M_18S/3PG_flt/3_future_frost/", scen, "/") # don't forget the forward /
 dir.create(output_folder, showWarnings = FALSE)
+
 
 # Loop through the list of files
 for (file in tiffs) {
@@ -226,16 +237,16 @@ compareGeom(check.rast1, tree.mask)
 
 #####
 # aggregate
-fp = "D:/BP_Layers/M_18S/3PG_flt/3_frost"
+fp = "D:/BP_Layers/M_18S/3PG_flt/3_future_frost/Y5_S3"
 
 tiffs = list.files(fp, pattern = ".tif$", full.names = T, recursive = T)
 
 # Create a new folder to save the processed rasters
-output_folder <- "D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all/"
+output_folder <- "D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_future/Y5_S3"
 dir.create(output_folder, showWarnings = FALSE)
 
 for(t in tiffs){
-  out.path = str_replace(t, "3_frost", "5_90m_inputs_all")
+  out.path = str_replace(t, "BP_Layers/M_18S/3PG_flt/3_future_frost", "BP_Layers/M_18S/3PG_flt/5_90m_inputs_future")
 
   if(file.exists(out.path)){next}
 
@@ -254,9 +265,9 @@ compareGeom(check.rast, check.rast2)
 # create float files
 
 # Set the input and output directories
-input_dir <- "D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all"
+input_dir <- "D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_future/Y2_S1"
 
-output_dir <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
+output_dir <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_future/Y2_S1"
 
 # Get the list of TIFF files in the input directory
 tif_files <- list.files(input_dir, pattern = ".tif$", full.names = TRUE)
@@ -285,7 +296,7 @@ for (tif_file in tif_files) {
   cat("Converted:", tif_file, "\n")
 }
 
-check.rast3 <- rast("D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all/PPT11.tif")
+check.rast3 <- rast("D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all/PPT09.tif")
 
 ###
 # We want to find the lower left center of the X and Y dimension for the header files:
@@ -306,7 +317,8 @@ library(stringr)
 # This will be different for every study site
 
 #directory <- "Y:/Francois/flt_test_100_noNA"
-directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
+#directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
+directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_future/Y5_S3"
 
 # Get the list of .hdr files in the directory
 hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
@@ -335,8 +347,8 @@ check.rast4 <- rast("D:/BP_Layers/M_18S/3PG_flt/2_climate_align/NFFD05.tif")
 ###
 # random final checks
 
-check.raster5 <- rast("D:/BP_Layers/M_18S/3PG_flt/6_90m_flt/NFFD10.flt")
-check.raster6 <- rast("D:/BP_Layers/M_18S/3PG_flt/6_90m_flt/Rad12.flt")
+check.raster5 <- rast("D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_future/Y5_S1/Tmin09.flt")
+check.raster6 <- rast("D:/BP_Layers/M_18S/3PG_flt/6_90m_flt/Forest_Age_2019.flt")
 
 compareGeom(check.raster5, check.raster6)
 

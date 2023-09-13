@@ -7,6 +7,22 @@ dem.rast <- rast("D:/BP_Layers/NCC_DEM/dem_crop_M_9S_30m.tif")
 sca <- rast("D:/BP_Layers/NCC_DEM/SCA.tif")
 slope <- rast("D:/BP_Layers/NCC_DEM/SLOPE.tif")
 
+# reload the slope and flow accumulation rasters that we created above
+slope_wb <- ("D:/BP_Layers/NCC_DEM/SLOPE.tif")
+sca_wb<- ("D:/BP_Layers/NCC_DEM/SLOPE.tif")
+
+# run TWI tool
+wbt_wetness_index(sca_wb,slope_wb,
+                 "D:/BP_Layers/M_9S/3PG_flt/TWI_test_ncc.tif",
+                  wd = NULL, verbose_mode = FALSE)
+
+
+cti_test <- rast("D:/BP_Layers/M_9S/3PG_flt/TWI_test_ncc.tif")
+
+cti.df <- as.data.frame(cti_test)
+
+cti_test.new = 168.1807 * cti_test - 273.80884
+
 cti <- rast("D:/BP_Layers/NCC_DEM/Scaled_CTI.tif")
 
 cti.df <- as.data.frame((cti$Scaled_CTI))
@@ -43,19 +59,20 @@ boreal <- vect("D:/BP_Layers/shapefiles/Boreal_Forest.shp")
 
 crs.soil <- crs(soil.carbon)
 
-#project the study area shapefile 
-boreal.proj <- terra::project(boreal, crs.soil, threads = T) 
-                                  
-#crop the large raster using the projected study area 
+#project the study area shapefile
+#boreal.proj <- terra::project(boreal, crs.soil, threads = T)
+boreal.proj <- terra::project(boreal, crs.soil)
+
+#crop the large raster using the projected study area
 soil.crop <- terra::crop(soil.carbon, boreal.proj, threads = T, mask = T)
 
 #shapefile of study area
-study.area <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_M_nineS.shp") 
+study.area <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_M_nineS.shp")
 study.area.sf <- st_read("D:/Landcover/francois2/Shapefiles/Study_Area_M_nineS.shp")
 study.buff <- st_buffer(study.area.sf, dist = 300)
 study.buff2 <- vect(study.buff)
 
-#project the study area shapefile 
+#project the study area shapefile
  # buffer this moving forward?
 study.proj <- terra::project(study.buff2, crs.soil)
 
@@ -80,20 +97,53 @@ compareGeom(check.rast, soil.utm9.90m)
 
 writeRaster(soil.utm9.90m, "Y:/Francois/_dem/soil_carbon_aligned.tif", overwrite = T)
 
-soil.scale <- (0.0033 * soil.utm9.90m) + 0.33333
+soil.utm9.90m <- rast("D:/BP_Layers/M_9S/3PG_flt/1_other_inputs/soil_carbon_aligned.tif")
 
-soil.scale[is.na(soil.scale)] <- 0.5
-soil.scale <- focal(soil.scale, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
 
-writeRaster(soil.scale, "D:/BP_Layers/NCC_DEM/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
+# Scaling based on entire boreal range of values - see excel sheet
+#################
+# Can do this multiple ways:
+# Calculate the 5th and 95th percentiles of the original data
+soil.crop.df <- as.data.frame(soil.crop)
 
+percentile_5 <- quantile(soil.crop.df$GSOCmap1.5.0, probs = 0.1)
+percentile_95 <- quantile(soil.crop.df$GSOCmap1.5.0, probs = 0.9)
+
+# Define the original and scaled percentile values
+original_percentiles <- c(percentile_5, percentile_95)
+scaled_percentiles <- c(0.05, 0.95)
+
+# Calculate the slope and intercept of the linear equation
+slope <- (scaled_percentiles[2] - scaled_percentiles[1]) / (original_percentiles[2] - original_percentiles[1])
+intercept <- scaled_percentiles[1] - slope * original_percentiles[1]
+
+
+soil.scale.2 <- (0.0037  * test) + 0.2667
+
+mean.fert <- global(soil.scale.2, fun = "mean", na.rm = TRUE)
+
+soil.scale.2[is.na(soil.scale.2)] <- mean.fert
+soil.scale.2 <- focal(soil.scale.2, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+
+#writeRaster(soil.scale.2, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
+
+#################
+
+# ORIGINAL:
+#soil.scale <- (0.0033 * soil.utm9.90m) + 0.33333
+
+#soil.scale[is.na(soil.scale)] <- 0.5
+#soil.scale <- focal(soil.scale, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+
+
+#soil.scale <- rast("D:/BP_Layers/NCC_DEM/soil_carbon_aligned_scaled_noNA.tif")
 ######
 
 # Write the raster in FLT4S format to the output file
-writeRaster(soil.scale, "D:/BP_Layers/NCC_DEM/soil_carbon_aligned_scaled_noNA.flt", datatype = "FLT4S", overwrite = TRUE)
-writeRaster(cti.align, "D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.flt",  datatype = "FLT4S", overwrite = TRUE )
+#writeRaster(soil.scale, "D:/BP_Layers/NCC_DEM/soil_carbon_aligned_scaled_noNA.flt", datatype = "FLT4S", overwrite = TRUE)
+#writeRaster(cti.align, "D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.flt",  datatype = "FLT4S", overwrite = TRUE )
 
-writeRaster(dem.align, "D:/BP_Layers/NCC_DEM/dem.flt",  datatype = "FLT4S", overwrite = TRUE )
+#writeRaster(dem.align, "D:/BP_Layers/NCC_DEM/dem.flt",  datatype = "FLT4S", overwrite = TRUE )
 
 
 ###
@@ -122,16 +172,16 @@ for (hdr_file in hdr_files) {
     "nodata_value -9999.000000",
     "byteorder lsbfirst"
   )
-  
 
-  
+
+
   # Write the new content to the .hdr file, overwriting the existing contents
   writeLines(new_content, hdr_file)
 }
 
 # random final checks
 
-check.raster5 <- rast("D:/Radiation/test_crop_project/6_90m_flt/Tmin02.flt")
+check.raster5 <- rast("D:/BP_Layers/M_9S/3PG_flt/6_90m_flt_other_inputs/Forest_Age_2019.flt")
 check.raster6 <- rast("D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.flt")
 check.raster7 <- rast("D:/BP_Layers/NCC_DEM/hillshade.flt")
 
@@ -152,12 +202,12 @@ asp <- terrain(dem.align, "aspect", unit = "radians")
 plot(asp)
 
 # calculate the hillshade effect with 45º of elevation
-hill_single <- shade(sl, asp, 
-                     angle = 45, 
+hill_single <- shade(sl, asp,
+                     angle = 45,
                      direction = 300,
                      normalize= TRUE)
 
-# final hillshade 
+# final hillshade
 plot(hill_single, col = viridis(100))
 
 writeRaster(hill_single, "D:/BP_Layers/NCC_DEM/hillshade.flt",  datatype = "FLT4S", overwrite = TRUE )

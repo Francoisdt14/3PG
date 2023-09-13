@@ -1,45 +1,13 @@
 library(terra)
 library(sf)
+library(tictoc)
 
 
-dem.rast <- rast("D:/BP_Layers/NCC_DEM/dem_crop_M_9S_30m.tif")
-
-sca <- rast("D:/BP_Layers/NCC_DEM/SCA.tif")
-slope <- rast("D:/BP_Layers/NCC_DEM/SLOPE.tif")
-
-cti <- rast("D:/BP_Layers/NCC_DEM/Scaled_CTI.tif")
-
-cti.df <- as.data.frame((cti$Scaled_CTI))
-
-####
-
-# reference raster
-check.rast <- rast("D:/Radiation/test_crop_project/5_90m_inputs_all/Rad06.tif")
-
-# Aggregate DEM and CTI
-dem.agg <-  terra::aggregate(dem.rast, 100/res(dem.rast)[1])
-cti.agg <- terra::aggregate(cti, 100/res(cti)[1])
-
-# Align the input raster to the reference raster
-tic()
-dem.align <- resample(dem.agg, check.rast, method = 'cubicspline', threads = T)
-toc()
-
-cti.align <- resample(cti.agg, check.rast, method = 'cubicspline', threads = T)
-
-###
-# Compare geom
-compareGeom(dem.align, check.rast)
-compareGeom(cti.align, check.rast)
-####
-
-#writeRaster(dem.align, "D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.tif" )
-
+dem.rast <- rast("D:/BP_Layers/M_18S/inputs/dem_filled_M_18S.tif")
 ###
 
 soil.carbon <- rast("D:/BP_Layers/NCC_DEM/GSOCmap1.5.0.tif")
 boreal <- vect("D:/BP_Layers/shapefiles/Boreal_Forest.shp")
-
 
 crs.soil <- crs(soil.carbon)
 
@@ -50,9 +18,12 @@ boreal.proj <- terra::project(boreal, crs.soil)
 soil.crop <- terra::crop(soil.carbon, boreal.proj, threads = T, mask = T)
 
 #shapefile of study area
-study.area <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_M_nineS.shp")
-study.area.sf <- st_read("D:/Landcover/francois2/Shapefiles/Study_Area_M_nineS.shp")
+study.area <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_M_eighteenS.shp")
+
+study.area.sf <- st_read("D:/Landcover/francois2/Shapefiles/Study_Area_M_eighteenS.shp")
+
 study.buff <- st_buffer(study.area.sf, dist = 300)
+
 study.buff2 <- vect(study.buff)
 
 #project the study area shapefile
@@ -62,38 +33,48 @@ study.proj <- terra::project(study.buff2, crs.soil)
 
 soil.crop.study <- terra::crop(soil.carbon, study.proj, threads = T, mask = T)
 
-soil.utm9 <- terra::project(soil.crop.study, "EPSG:32609")
+soil.utm <- terra::project(soil.crop.study, "EPSG:32618", gdal = T)
 
-study.area.utm9 <- terra::project(study.area,"EPSG:32609")
+study.area.utm <- terra::project(study.area,"EPSG:32618")
 
-soil.utm9.crop <- terra::crop(soil.utm9, study.area.utm9)
+soil.utm.crop <- terra::crop(soil.utm, study.area.utm)
+
 
 # Resample the large raster to match the resolution of the smaller raster
-soil.utm9.90m <- resample(soil.utm9, check.rast, method = "cubicspline", threads = T)
-soil.utm9.90m <- focal(soil.utm9.90m, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+soil.utm.90m <- resample(soil.utm, check.rast, method = "cubicspline", threads = T)
+
+soil.utm.90m <- focal(soil.utm.90m, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
 
 ###
 
 
-compareGeom(check.rast, soil.utm9.90m)
+compareGeom(check.rast, soil.utm.90m)
 
 
-writeRaster(soil.utm9.90m, "Y:/Francois/_dem/soil_carbon_aligned.tif", overwrite = T)
+writeRaster(soil.utm.90m, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_90m.tif", overwrite = T)
 
-soil.scale <- (0.0033 * soil.utm9.90m) + 0.33333
+
+#test <- rast("Y:/Francois/_dem/soil_carbon_aligned.tif")
+
+# based on entire boreal values
+soil.scale <- (0.0033 * soil.utm.90m) + 0.33333
 
 soil.scale[is.na(soil.scale)] <- 0.5
 soil.scale <- focal(soil.scale, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
 
-writeRaster(soil.scale, "D:/BP_Layers/NCC_DEM/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
+writeRaster(soil.scale, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
 
+
+#soil.scale <- rast("D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.tif")
 ######
 
-# Write the raster in FLT4S format to the output file
-writeRaster(soil.scale, "D:/BP_Layers/NCC_DEM/soil_carbon_aligned_scaled_noNA.flt", datatype = "FLT4S", overwrite = TRUE)
-writeRaster(cti.align, "D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.flt",  datatype = "FLT4S", overwrite = TRUE )
 
-writeRaster(dem.align, "D:/BP_Layers/NCC_DEM/dem.flt",  datatype = "FLT4S", overwrite = TRUE )
+# Write the raster in FLT4S format to the output file
+#writeRaster(soil.scale, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.flt", datatype = "FLT4S", overwrite = TRUE)
+
+#writeRaster(cti.align, "D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.flt",  datatype = "FLT4S", overwrite = TRUE )
+
+writeRaster(dem.align, "D:/BP_Layers/M_18S/inputs/dem_filled_M_18S_90m.flt",  datatype = "FLT4S", overwrite = TRUE )
 
 
 ###
@@ -104,7 +85,7 @@ library(stringr)
 # Set the directory where the .hdr and .flt files are located
 
 #directory <- "Y:/Francois/flt_test_100_noNA"
-directory <- "D:/BP_Layers/NCC_DEM/"
+directory <- "D:/BP_Layers/M_18S/inputs/"
 # Get the list of .hdr files in the directory
 hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
 
@@ -138,10 +119,7 @@ check.raster7 <- rast("D:/BP_Layers/NCC_DEM/hillshade.flt")
 compareGeom(check.raster5, check.raster7)
 
 
-dbh.3pg <- rast("Y:/Francois/_dem/C++/Output_100/dbh.flt")
-vol.3pg <- rast("Y:/Francois/_dem/C++/Output_100/s_vol.flt")
-
-
+##############################################################################################################################
 
 #####
 sl <- terrain(dem.align, "slope", unit = "radians")
@@ -160,5 +138,5 @@ hill_single <- shade(sl, asp,
 # final hillshade
 plot(hill_single, col = viridis(100))
 
-writeRaster(hill_single, "D:/BP_Layers/NCC_DEM/hillshade.flt",  datatype = "FLT4S", overwrite = TRUE )
+#writeRaster(hill_single, "D:/BP_Layers/M_18S/inputs/hillshade.tif", overwrite = TRUE )
 

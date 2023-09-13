@@ -32,7 +32,7 @@ parameters <-  read_xlsx(f_loc, 'parameters')
 boxes.v <- vect("D:/BP_Layers/outputs/boxes.shp")
 
 # Make sure we are sending this to the correct folder!
-output_folder <- "D:/BP_Layers/outputs/crops/889_test/varied/alpha/asw_150"
+output_folder <- "D:/BP_Layers/outputs/crops/889_test/flt"
 
 # 25 square 5 x 5
 #tile.numb <- c(392:396, 423:427, 454:458, 485:489, 516:520)
@@ -110,7 +110,7 @@ for (i in tile.numb) {         #nrow(boxes.v)) {
 
     #result <- Calculate_3PG_80(climate_df2, full_comb_clean, cl = cl)
 
-    result <- Calculate_3PG_TEST(climate_df2, full_comb_clean, cl = cl)
+    result <- Calculate_3PG_flt(climate_df2, full_comb_clean, cl = cl)
 
     result_df <- bind_rows(result)
 

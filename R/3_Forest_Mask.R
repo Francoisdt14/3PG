@@ -26,3 +26,12 @@ xnum[!is.na(xnum)] <- 1 # set the forested landcovers to 1
 mask_crop <- terra::crop(xnum, study)
 
 writeRaster(mask_crop, "D:/BP_Layers/M_18S/tree_mask.tif", datatype = "INT2U", overwrite = T) # write this mask as it will be used moving forward!
+
+
+###############################
+# If we want to make the mask for different forest types - we can do that here:
+
+x <- droplevels(landcover) # get rid of un-necessary data
+xnum <- as.numeric(x) # convert the raster to numeric - need to keep an eye on which codes we want
+xnum[!xnum %in% c(81, 210, 220, 230, 40, 50, 100, 33)] <- NA # here we want to keep the forested PLUS potentially forested, so set everything that isn't to NA
+xnum[!is.na(xnum)] <- 1 # set the forested landcovers to 1

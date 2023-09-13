@@ -9,13 +9,19 @@ library(viridis)
 ######################################################################################################################
 # M 9 S -
 
+y.rast <- rast("D:/BP_Layers/M_9S/3PG_flt/1_other_inputs/latitude_30m.tif")
+
+
 # Read in Biomass Rasters for WF (foliage) and WS (Stem) that need to be combined..
 # Lodgepole Pine
-ws_lp <- rast("D:/3PG_Cplusplus/_delete/ws_lp.flt")
-wf_lp <- rast("D:/3PG_Cplusplus/_delete/wf_lp.flt")
+ws_lp <- rast("D:/3PG_Cplusplus/output_M_9S/ws.flt")
+wf_lp <- rast("D:/3PG_Cplusplus/output_M_9S/wf.flt")
+
+
 # Black Spruce - in M 9 S
-ws_bs <- rast("D:/3PG_Cplusplus/_delete/ws_bs.flt")
-wf_bs <- rast("D:/3PG_Cplusplus/_delete/wf_bs.flt")
+#ws_bs <- rast("D:/3PG_Cplusplus/_delete/ws_bs.flt")
+#wf_bs <- rast("D:/3PG_Cplusplus/_delete/wf_bs.flt")
+
 # Future Lodgepole Pine
 ws_lp_245 <- rast("D:/3PG_Cplusplus/_delete/ws_lp_245.flt")
 wf_lp_245 <- rast("D:/3PG_Cplusplus/_delete/wf_lp_245.flt")
@@ -23,7 +29,12 @@ wf_lp_245 <- rast("D:/3PG_Cplusplus/_delete/wf_lp_245.flt")
 # Combine the rasters to get total AGB
 
 lp_agb <- ws_lp + wf_lp
-bs_agb <- ws_bs + wf_bs
+
+mask <- rast("D:/BP_Layers/M_9S/3PG_flt/6_90m_flt_other_inputs/Forest_Age_2019_withNA.flt")
+crs(lp_agb) <- crs(mask)
+compareGeom(lp_agb,mask)
+
+#bs_agb <- ws_bs + wf_bs
 lp_245_agb <- ws_lp_245 + wf_lp_245
 
 future.diff <- lp_245_agb-lp_agb
@@ -32,11 +43,11 @@ future.diff <- lp_245_agb-lp_agb
 
 # Read in the forest age mask so that we can mask out the treed areas for current comparisons
 tree.mask <- rast("D:/BP_Layers/outputs/tree_mask.tif")
-tree.mask.90 <-  terra::aggregate(tree.mask, 100/res(y.rast)[1])
+tree.mask.90 <-  terra::aggregate(tree.mask, 100/res(tree.mask)[1])
 
 # Mask out the non-treed areas
 
-lp_agb.mask <- terra::mask(lp_agb, tree.mask.90)
+lp_agb.mask <- terra::mask(lp_agb, mask)
 bs_agb.mask <- terra::mask(bs_agb, tree.mask.90)
 lp_245_agb.mask <- terra::mask(lp_245_agb, tree.mask.90)
 
@@ -47,7 +58,7 @@ future.diff.mask <- lp_245_agb.mask - lp_agb.mask
 # Read in the NTEMS Biomass for the study area
 
 ntems_agb <- rast("D:/Landcover/M_9S/biomass_ntems_full.tif")
-ntems_agb.90 <-  terra::aggregate(ntems_agb, 100/res(y.rast)[1], cores = 8)
+ntems_agb.90 <-  terra::aggregate(ntems_agb, 100/res(ntems_agb)[1], cores = 8)
 
 # Read landcover?
 land <- rast("D:/BP_Layers/M_9S/landcover/LC_Class_HMM_2021_v20_v20.dat")
@@ -87,12 +98,13 @@ lp_fraction <- sum(category_counts[lp_bs]) / sum(category_counts)
 
 global(species.90.f, "notNA")
 
+############################################
+# mask by species
+
 # Can do something like this:
 mask.lp <- species.90.f == 23
 
 # We want to check specific species so mask:
-
-lp.abg.masked.species <- lp_agb
 
 lp.abg.masked.species <- mask(lp_agb, mask.lp, maskvalues = c(NA,0))
 
@@ -196,20 +208,46 @@ df_long <- df.bio %>%
   pivot_longer(cols = everything(), names_to = "Column Heading", values_to = "Value")
 
 # Define a custom color palette
-my_palette <- c("#355EAF", "#FF6F00", "forestgreen")
+my_palette <- c("#2AB7CA", "#ED217C", "#5AD660")
 
 # Plot the density using the long format dataframe
 
 # Define custom legend labels
-my_labels <- c("NTEMS", "lp", "lp_future")
+my_labels <- c("LP", "LP Future", "NTEMS")
+
+# Define the data frame for means
+mean_data <- data.frame(
+    Category = c("LP", "LP Future", "NTEMS"),
+    MeanValue = c(127.8, 138.6, 103.8))
+#mean_data <- mean_data[complete.cases(mean_data), ]
 
 # Plot the density using the long format dataframe
-ggplot(df_long, aes(x = Value, color = `Column Heading`)) +
+density_plot <- ggplot(df_long, aes(x = Value, color = `Column Heading`)) +
   geom_density(size = 0.75) +
   labs(x = "Value", y = "Density") +
-  scale_color_manual(values = my_palette, name = "Column Heading", labels = my_labels) +
+  scale_color_manual(values = my_palette, name = "Prediction", labels = my_labels) +
   theme_bw() +
-  ylim(0, 0.1)
+  ylim(0, 0.04)+
+    geom_vline(data = mean_data, aes(xintercept = MeanValue),
+                          linetype = "dashed", color = my_palette, size = 0.75, show.legend = FALSE) +
+    guides(linetype = FALSE)+
+    coord_cartesian(xlim = c(0, 300))  # Set x-axis limits
+
+##
+# Plot the density using the long format dataframe
+density_plot <- ggplot(df_long, aes(x = Value, color = `Column Heading`)) +
+    geom_density(size = 0.75) +
+    labs(x = "Value", y = "Density") +
+    scale_color_manual(values = my_palette, name = "Prediction", labels = my_labels) +
+    theme_bw() +
+    ylim(0, 0.04) +
+    geom_vline(data = mean_data, aes(xintercept = MeanValue),
+               linetype = "dashed", color = my_palette, size = 0.75, show.legend = FALSE) +
+    guides(linetype = FALSE) +
+    coord_cartesian(xlim = c(0, 300)) +  # Set x-axis limits
+    geom_text(data = mean_data, aes(x = MeanValue, y = 0.037, label = MeanValue),
+              vjust = -1, color = "black", size = 3)
+
 
 # Randomly sample 50,000 points
 df_sample <- df.bio %>%
