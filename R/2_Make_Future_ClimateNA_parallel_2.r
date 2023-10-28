@@ -9,7 +9,7 @@ tmpFiles(remove = T)
 #fl = list.files("D:/climate/Future/dem_csv", recursive = T, full.names = T, pattern = ".csv$") %>% str_subset("M_9S")
 
 #fl <- "D:/climate/M_9S/dem_crop_M_9S.csv"
-fl <- "D:/climate/M_18S/dem_crop_M_18S.csv"
+fl <- "D:/climate/M_11S/dem_crop_M_11S.csv"
 yrs = c("Y2", "Y3", "Y4", "Y5")
 ssps = c("S1", "S2", "S3")
 
@@ -37,12 +37,12 @@ pbapply(fy.df, MARGIN = 1, FUN = function(rw){
     # Copy the file to the climateNA directory
     #file.to = str_split(f, "/", simplify = T) %>% .[,ncol(.)] # this is within the climateNA directory
 
-    file.to <- "D:/ClimateNA_v730/dem_crop_M_18S.csv"
+    file.to <- "D:/ClimateNA_v730/dem_crop_M_11S.csv"
 
     file.simplify = str_split(f, "/", simplify = T) %>% .[,ncol(.)] # this is within the climateNA directory
 
     f.chk = str_replace(file.simplify, ".csv", paste0("_", yr, "_", ssp.c, ".csv")) %>%
-        paste0("D:/climate/Future/M_18S/", .) # this is where we eventually want it to go
+        paste0("D:/climate/Future/M_11S/", .) # this is where we eventually want it to go
 
     #file.copy(f, file.to) # copy to climateNA wd
 

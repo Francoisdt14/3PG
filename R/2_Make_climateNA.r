@@ -8,12 +8,15 @@ library(tidyverse); library(terra); library(data.table); library(silvR21); libra
 
 dem <- rast("Z:/_CanadaLayers/Rasters/DEM/UTM18S_DEM.dat") #Z:\_CanadaLayers\Rasters\DEM
 
-study <- vect("D:/PostDoc/Layers/BP_Maps/Study_Area_U_18S.shp") #D:\PostDoc\Layers\BP_Maps\Study_Area_1_18S
+study <- vect("D:/BP_Layers/study_areas/Study_Area_U_eighteenS.shp") #D:\PostDoc\Layers\BP_Maps\Study_Area_1_18S
+study2 <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_U_eighteenS.shp")
 
-dem_crop <- terra::crop(dem, study)
+# Project the vector to the same CRS as the raster - important to check what projections we have!
+study4 <- project(study2, crs(dem))
 
+dem_crop <- terra::crop(dem, study4)
 
-# terra::writeRaster(dem_crop, "D:/climate/U_18S/dem_crop_U_18S.tif") # D:\climate\dems
+terra::writeRaster(dem_crop, "D:/climate/U_18S/dem_crop_U_18S.tif") # D:\climate\dems
 # The above raster is a 30 meter raster resolution raster
 
 rm(list = ls())

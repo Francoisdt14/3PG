@@ -298,8 +298,8 @@ grid.arrange(plot_lp2, p.scatter, p.scatter2, ncol = 3)
 ##################################################################################
 # M_18S
 
-ws_bs <- rast("D:/3PG_Cplusplus/Output_100_18S/ws202007.flt")
-wf_bs <- rast("D:/3PG_Cplusplus/Output_100_18S/wf202007.flt")
+ws_bs <- rast("D:/3PG_Cplusplus/output_M_18S_bs/ws202007.flt")
+wf_bs <- rast("D:/3PG_Cplusplus/output_M_18S_bs/wf202007.flt")
 
 # Combine the rasters to get total AGB
 

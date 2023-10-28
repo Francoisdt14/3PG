@@ -32,36 +32,36 @@ writeRaster(raster_filled, "D:/BP_Layers/M_18S/inputs/dem_filled_M_18S.tif")
 #Create TWI for a raster - to be used in arc pro?
 
 #input for whiteboxtools - don't read the DEM into R with the raster package
-dem <- ("D:/BP_Layers/M_18S/inputs/dem_filled_M_18S.tif")
-dem.rast <- rast("D:/BP_Layers/M_18S/inputs/dem_filled_M_18S.tif")
+dem <- ("D:/climate/U_13N/dem_crop_U_13N.tif")
+dem.rast <- rast("D:/climate/U_13N/dem_crop_U_13N.tif")
 
 # first we can create the slope - can't see output of whiteboxtools in R, need to load in after to view
-wbt_slope(dem, "D:/BP_Layers/M_18S/large_rasters/slope_M_18S.tif", zfactor = 1, units = "degrees")
+wbt_slope(dem, "D:/BP_Layers/U_13N/large_rasters/slope_U_13N.tif", zfactor = 1, units = "degrees")
 
 ######
 
 # create a flow accumulation raster to use for TWI
-wbt_d8_flow_accumulation(dem, "D:/BP_Layers/M_18S/large_rasters/flow_accum_M_18S.tif", out_type = "cells",
+wbt_d8_flow_accumulation(dem, "D:/BP_Layers/U_13N/large_rasters/flow_accum_U_13N.tif", out_type = "cells",
                          log = FALSE, clip = FALSE)
 
 #####
 
 # reload the slope and flow accumulation rasters that we created above
-slope_wb <- ("D:/BP_Layers/M_18S/large_rasters/slope_M_18S.tif")
-sca_wb<- ("D:/BP_Layers/M_18S/large_rasters/flow_accum_M_18S.tif")
+slope_wb <- ("D:/BP_Layers/U_13N/large_rasters/slope_U_13N.tif")
+sca_wb<- ("D:/BP_Layers/U_13N/large_rasters/flow_accum_U_13N.tif")
 
 # run TWI tool
 wbt_wetness_index(sca_wb,slope_wb,
-                  "D:/BP_Layers/M_18S/large_rasters/TWI_M_18S.tif",
+                  "D:/BP_Layers/U_13N/large_rasters/TWI_U_13N.tif",
                   wd = NULL, verbose_mode = FALSE)
 
 
 
 # now we can load in the rasters using the raster package to view the products
 
-slope <- rast("D:/BP_Layers/M_18S/large_rasters/slope_M_18S.tif")
-flow_accum <- rast("D:/BP_Layers/M_18S/large_rasters/flow_accum_M_18S.tif")
-TWI <- rast("D:/BP_Layers/M_18S/large_rasters/TWI_M_18S.tif")
+slope <- rast("D:/BP_Layers/U_13N/large_rasters/slope_U_13N.tif")
+flow_accum <- rast("D:/BP_Layers/U_13N/large_rasters/flow_accum_U_13N.tif")
+TWI <- rast("D:/BP_Layers/U_13N/large_rasters/TWI_U_13N.tif")
 
 # plot
 par(mfrow=c(2,2))
@@ -76,11 +76,11 @@ plot(TWI, main="TWI")
 
 TWI.df <- as.data.frame(TWI)
 
-percentile_5 = quantile(TWI.df$TWI_M_18S, probs = 0.05)
-percentile_95 = quantile(TWI.df$TWI_M_18S, probs = 0.95)
+percentile_5 = quantile(TWI.df$TWI_U_13N, probs = 0.05)
+percentile_95 = quantile(TWI.df$TWI_U_13N, probs = 0.95)
 
-# Original values
-original_values <- c(2.093, 5.887)
+# Original values - from above?
+original_values <- c(percentile_5, percentile_95)
 
 # Corresponding scaled values
 scaled_values <- c(100, 300)
@@ -88,8 +88,8 @@ scaled_values <- c(100, 300)
 #######
 # Can do this multiple ways:
 # Calculate the 5th and 95th percentiles of the original data
-percentile_5 <- quantile(TWI.df$TWI_M_18S, probs = 0.05)
-percentile_95 <- quantile(TWI.df$TWI_M_18S, probs = 0.95)
+percentile_5 <- quantile(TWI.df$TWI_U_13N, probs = 0.05)
+percentile_95 <- quantile(TWI.df$TWI_U_13N, probs = 0.95)
 
 # Define the original and scaled percentile values
 original_percentiles <- c(percentile_5, percentile_95)
@@ -106,18 +106,27 @@ summary(model)
 # formula to follow:
 #scaled_values = intercept + slope * original_values
 
-TWI.scaled <- (-10.33) + (52.72 * TWI)
+TWI.scaled <- (intercept) + (slope * TWI)
 hist(TWI.scaled)
 
 TWI.clamp <- clamp(TWI.scaled, lower = 0, upper = Inf)
 TWI.clamp
+######
 
-global(TWI.clamp, "isNA")
+mean.TWI <- global(TWI.clamp, fun = mean, na.rm = TRUE)
 
-##writeRaster(TWI.clamp, "D:/BP_Layers/M_18S/inputs/scaled_TWI.tif")
+
+##writeRaster(TWI.clamp, "D:/BP_Layers/U_13N/inputs/scaled_TWI.tif")
 
 TWI.clamp.noNA <- TWI.clamp
 
-TWI.clamp.noNA[is.na(TWI.clamp.noNA)] <- 50
+TWI.clamp.noNA[is.na(TWI.clamp.noNA)] <- mean.TWI
 
-#writeRaster(TWI.clamp.noNA, "D:/BP_Layers/M_18S/inputs/scaled_TWI_noNA.tif")
+#writeRaster(TWI.clamp.noNA, "D:/BP_Layers/U_13N/inputs/scaled_TWI_noNA.tif")
+
+TWI.90m = terra::aggregate(TWI.clamp.noNA, 100/res(TWI.clamp.noNA)[1], cores = 12)
+
+writeRaster(TWI.90m, "D:/BP_Layers/U_13N/3PG_flt/5_90m_inputs_all/scaled_TWI_noNA.tif")
+
+
+

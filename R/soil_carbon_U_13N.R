@@ -6,7 +6,6 @@ library(tictoc)
 dem.rast <- rast("D:/climate/U_13N/dem_crop_U_13N.tif")
 ###
 
-
 soil.carbon <- rast("D:/BP_Layers/NCC_DEM/GSOCmap1.5.0.tif")
 boreal <- vect("D:/BP_Layers/shapefiles/Boreal_Forest.shp")
 
@@ -19,9 +18,9 @@ boreal.proj <- terra::project(boreal, crs.soil)
 soil.crop <- terra::crop(soil.carbon, boreal.proj, threads = T, mask = T)
 
 #shapefile of study area
-study.area <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_M_eighteenS.shp")
+#study.area <- vect("D:/Landcover/francois2/Shapefiles/Study_Area_M_eighteenS.shp")
 
-study.area.sf <- st_read("D:/Landcover/francois2/Shapefiles/Study_Area_M_eighteenS.shp")
+study.area.sf <- st_read("D:/Landcover/francois2/Shapefiles/Study_Area_U_thirteenN.shp")
 
 study.buff <- st_buffer(study.area.sf, dist = 300)
 
@@ -34,37 +33,42 @@ study.proj <- terra::project(study.buff2, crs.soil)
 
 soil.crop.study <- terra::crop(soil.carbon, study.proj, threads = T, mask = T)
 
-soil.utm <- terra::project(soil.crop.study, "EPSG:32618", gdal = T)
 
-study.area.utm <- terra::project(study.area,"EPSG:32618")
+soil.utm <- terra::project(soil.crop.study, crs(dem.rast), threads = T, gdal = TRUE, by_util = TRUE)
 
-soil.utm.crop <- terra::crop(soil.utm, study.area.utm)
+#study.area.utm <- terra::project(study.area,"EPSG:32618")
+
+soil.utm.crop <- terra::crop(soil.utm, dem.rast)
 
 
 # Resample the large raster to match the resolution of the smaller raster
-soil.utm.90m <- resample(soil.utm, check.rast, method = "cubicspline", threads = T)
+soil.utm.30m <- resample(soil.utm, dem.rast, method = "cubicspline", threads = T)
 
-soil.utm.90m <- focal(soil.utm.90m, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+soil.utm.30m <- focal(soil.utm.30m, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+
 
 ###
 
 
-compareGeom(check.rast, soil.utm.90m)
+compareGeom(dem.rast, soil.utm.30m)
 
 
-writeRaster(soil.utm.90m, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_90m.tif", overwrite = T)
+writeRaster(soil.utm.30m, "D:/BP_Layers/U_13N/inputs/soil_carbon_aligned_30m.tif", overwrite = T)
 
 
 #test <- rast("Y:/Francois/_dem/soil_carbon_aligned.tif")
 
 # based on entire boreal values
-soil.scale <- (0.0033 * soil.utm.90m) + 0.33333
+soil.scale <- (0.0033 * soil.utm.30m) + 0.33333
 
 soil.scale[is.na(soil.scale)] <- 0.5
 soil.scale <- focal(soil.scale, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
 
-writeRaster(soil.scale, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
+#writeRaster(soil.scale, "D:/BP_Layers/U_13N/inputs/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
 
+soil.scale.90m <- terra::aggregate(soil.scale, 100/res(soil.scale)[1], cores = 12)
+
+writeRaster(soil.scale.90m, "D:/BP_Layers/U_13N/inputs/soil_carbon_aligned_scaled_noNA_90m.tif", overwrite = T)
 
 #soil.scale <- rast("D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.tif")
 ######
@@ -75,7 +79,7 @@ writeRaster(soil.scale, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_no
 
 #writeRaster(cti.align, "D:/BP_Layers/NCC_DEM/Scaled_CTI_aligned.flt",  datatype = "FLT4S", overwrite = TRUE )
 
-writeRaster(dem.align, "D:/BP_Layers/M_18S/inputs/dem_filled_M_18S_90m.flt",  datatype = "FLT4S", overwrite = TRUE )
+writeRaster(soil.scale.90m, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA_90m.flt",  datatype = "FLT4S", overwrite = TRUE )
 
 
 ###

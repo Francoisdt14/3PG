@@ -118,12 +118,35 @@ slope <- (scaled_percentiles[2] - scaled_percentiles[1]) / (original_percentiles
 intercept <- scaled_percentiles[1] - slope * original_percentiles[1]
 
 
-soil.scale.2 <- (0.0037  * test) + 0.2667
+###########################################################################################################################################################
+## I clipped the organic carbon data across the entire boreal first - that is 'soil.crop'
 
-mean.fert <- global(soil.scale.2, fun = "mean", na.rm = TRUE)
+# first look at a histogram of the entire boreal forest to get an idea of the range of values
+soil.crop.df <- as.data.frame(soil.crop)
+hist(soil.crop.df$GSOCmap1.5.0)
 
-soil.scale.2[is.na(soil.scale.2)] <- mean.fert
-soil.scale.2 <- focal(soil.scale.2, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
+# This is the 10th and 98th percentile of the entire boreal..
+percentile_10 <- quantile(soil.crop.df$GSOCmap1.5.0, probs = 0.1)
+percentile_98 <- quantile(soil.crop.df$GSOCmap1.5.0, probs = 0.98)
+
+# Define the original and scaled percentile values
+original_percentiles <- c(percentile_10, percentile_98)
+# When scaling I tried to keep the fertility relatively high - so the 10th percentile of my values are still 'forced' to have a fertility of 0.45. Did this after discussion with NCC
+# Looking at the histogram 200 is about as high as needed that can be the 99th percentile
+scaled_percentiles <- c(0.45, 0.99)
+
+# Calculate slope and intercept
+slope <- (scaled_percentiles[2] - scaled_percentiles[1]) / (original_percentiles[2] - original_percentiles[1])
+intercept <- scaled_percentiles[1] - slope * original_percentiles[1]
+
+# soil.utm9.90m is soil carbon layer clipped to my area
+soil.scale.3 <- (slope  * soil.utm9.90m) + intercept
+# calculate mean fertility just to fill NAs
+mean.fert <- global(soil.scale.3, fun = "mean", na.rm = TRUE)
+# fill NAs
+soil.scale.3[is.na(soil.scale.3)] <- mean.fert
+# Smooth the raster
+soil.scale.3 <- focal(soil.scale.3, w = 3, fun = "mean", na.policy = "only", na.rm = T, expand = T)
 
 #writeRaster(soil.scale.2, "D:/BP_Layers/M_18S/inputs/soil_carbon_aligned_scaled_noNA.tif", overwrite = T)
 

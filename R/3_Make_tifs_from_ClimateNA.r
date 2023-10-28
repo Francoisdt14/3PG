@@ -3,9 +3,12 @@ library(data.table)
 library(terra)
 library(stringr)
 
+rm(list = ls())
+tmpFiles(remove = T)
+
 # Generate a list of CSV files
 #csv_files <- list.files("D:/climate/Future/M_9S/", pattern = ".csv$", full.names = TRUE, recursive = TRUE)
-csv_files <- list.files("D:/climate/Future/M_18S/", pattern = ".csv$", full.names = TRUE, recursive = TRUE)
+csv_files <- list.files("D:/climate/Future/M_11S/", pattern = ".csv$", full.names = TRUE, recursive = TRUE)
 
 # Only do it for a few variables if you don't want to include all variables
 var.list <- fread("D:/climate/M_9S/climateNA_vars_subset.csv", header = FALSE) %>% pull(V1)
@@ -20,7 +23,7 @@ for (csv_file in csv_files) {
     Y_S <- substr(basename(csv_file), nchar(basename(csv_file)) - 8, nchar(basename(csv_file)) - 4)
 
     # Create the folder for output if it doesn't exist
-    output_folder <- file.path("D:/climate/Future/M_18S/tif_1km", Y_S) # change to D:/climate/Future/M_18S/tif_1km
+    output_folder <- file.path("D:/climate/Future/M_11S/tif_1km", Y_S) # change to D:/climate/Future/M_11S/tif_1km
     if (!dir.exists(output_folder)) {
         dir.create(output_folder, recursive = TRUE)
     }
@@ -29,7 +32,7 @@ for (csv_file in csv_files) {
     dt <- fread(csv_file) %>% dplyr::select(Latitude, Longitude, all_of(var.list))
     var.list2 <- names(dt)[4:ncol(dt)] # subset out the lat long, etc
 
-    r <- rast("D:/climate/M_18S/Study_Area_M_18S_1km.tif") # D:/climate/M_9S/Study_Area_M_9S_1km.tif
+    r <- rast("D:/climate/M_11S/Study_Area_M_11S_1km.tif") # D:/climate/M_9S/Study_Area_M_9S_1km.tif
 
     for(v in var.list2){
         print(v)
@@ -50,15 +53,15 @@ for (csv_file in csv_files) {
 
 # Path to the original 30m DEM
 #f.dem30 <- "D:/climate/M_9S/dem_crop_M_9S.tif"
-f.dem30 <- "D:/climate/M_18S/dem_crop_M_18S.tif"
+f.dem30 <- "D:/climate/M_11S/dem_crop_M_11S.tif"
 
 # Path to the tif_1km folder containing subfolders
 #input_folder <- "D:/climate/Future/M_9S/tif_1km"
-input_folder <- "D:/climate/Future/M_18S/tif_1km"
+input_folder <- "D:/climate/Future/M_11S/tif_1km"
 
 # Path to the output folder for 30m processed tifs
 #output_folder <- "D:/climate/Future/M_9S/tif_30m"
-output_folder <- "D:/climate/Future/M_18S/tif_30m"
+output_folder <- "D:/climate/Future/M_11S/tif_30m"
 
 # List all subfolders
 subfolders <- list.dirs(input_folder, full.names = FALSE, recursive = FALSE)
@@ -67,14 +70,18 @@ subfolders <- list.dirs(input_folder, full.names = FALSE, recursive = FALSE)
 for (subfolder in subfolders) {
     print(paste("Processing subfolder:", subfolder))
 
+    # Check if the subfolder already exists in the output folder
+    output_subfolder <- file.path(output_folder, subfolder)
+    if (dir.exists(output_subfolder)) {
+        cat("Subfolder already exists in the output folder, skipping:", subfolder, "\n")
+        next  # Skip to the next subfolder
+    }
+
     # List tif files in the current subfolder
     tif_files <- list.files(file.path(input_folder, subfolder), full.names = TRUE, pattern = ".tif$")
 
     # Create corresponding subfolder in the output folder if it doesn't exist
-    output_subfolder <- file.path(output_folder, subfolder)
-    if (!dir.exists(output_subfolder)) {
-        dir.create(output_subfolder, recursive = TRUE)
-    }
+    dir.create(output_subfolder, recursive = TRUE)
 
     num.valid <- rast(f.dem30) %>% global("notNA") %>% as.numeric()
 
@@ -111,7 +118,7 @@ for (subfolder in subfolders) {
             difftime(Sys.time(), t1, units = "secs") %>% as.numeric() %>% round(2) %>% paste0(" -- done in ", . , " seconds") %>% cat()
         }
 
-        terra::tmpFiles(remove = TRUE)
+        terra::tmpFiles(remove = TRUE); gc(verbose = F)
     }
 }
 
@@ -119,15 +126,17 @@ for (subfolder in subfolders) {
 ###########################
 
 
-# Parallel
-
-
+# Parallel for 30 m
 
 library(dplyr)
 library(data.table)
 library(terra)
 library(stringr)
 library(doParallel)
+
+rm(list = ls())
+tmpFiles(remove = T)
+
 
 # Set the number of cores for parallel processing
 num_cores <- 2  # Adjust the number of cores as needed
@@ -140,13 +149,13 @@ registerDoParallel(cl)
 clusterEvalQ(cl, {library(dplyr);library(data.table);library(terra);library(stringr)})
 
 # Path to the original 30m DEM
-f.dem30 <- "D:/climate/M_18S/dem_crop_M_18S.tif"
+f.dem30 <- "D:/climate/U_18S/dem_crop_U_18S.tif"
 
 # Path to the tif_1km folder containing subfolders
-input_folder <- "D:/climate/Future/M_18S/tif_1km"
+input_folder <- "D:/climate/Future/U_18S/tif_1km"
 
 # Path to the output folder for 30m processed tifs
-output_folder <- "D:/climate/Future/M_18S/tif_30m"
+output_folder <- "D:/climate/Future/U_18S/tif_30m"
 
 # List all subfolders
 subfolders <- list.dirs(input_folder, full.names = FALSE, recursive = FALSE)
@@ -183,21 +192,25 @@ process_tif <- function(f, f.dem30, num_valid, output_folder) {
     difftime(Sys.time(), t1, units = "secs") %>% as.numeric() %>% round(2) %>%
         paste0(" -- done in ", ., " seconds") %>% cat()
 
-    terra::tmpFiles(remove = TRUE)
+    terra::tmpFiles(remove = TRUE); gc(verbose = F)
 }
 
 # Loop through subfolders
 for (subfolder in subfolders) {
     print(paste("Processing subfolder:", subfolder))
 
+    # Check if the subfolder already exists in the output folder
+    output_subfolder <- file.path(output_folder, subfolder)
+    if (dir.exists(output_subfolder)) {
+        cat("Subfolder already exists in the output folder, skipping:", subfolder, "\n")
+        next  # Skip to the next subfolder
+    }
+
     # List tif files in the current subfolder
     tif_files <- list.files(file.path(input_folder, subfolder), full.names = TRUE, pattern = ".tif$")
 
     # Create corresponding subfolder in the output folder if it doesn't exist
-    output_subfolder <- file.path(output_folder, subfolder)
-    if (!dir.exists(output_subfolder)) {
-        dir.create(output_subfolder, recursive = TRUE)
-    }
+    dir.create(output_subfolder, recursive = TRUE)
 
     num_valid <- rast(f.dem30) %>% global("notNA") %>% as.numeric()
 
@@ -207,6 +220,7 @@ for (subfolder in subfolders) {
     }
 
     # End of loop iteration
+    terra::tmpFiles(remove = TRUE); gc(verbose = F)
 }
 
 # Stop the parallel backend

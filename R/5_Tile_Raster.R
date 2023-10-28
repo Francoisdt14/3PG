@@ -78,6 +78,8 @@ target_folder <- "D:/BP_Layers/M_18S/crops/rad"
 # Loop through the vector polygons and crop the rasters - here we are cropping just boxes 32:34...
 for (i in vals) {         #nrow(boxes.v)) {
 
+
+    #polygon <- boxes.v[boxes.v$name == i,]
     polygon <- boxes.v[i, ]
 
     filename <- paste0(polygon$name, ".csv")

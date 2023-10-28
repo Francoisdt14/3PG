@@ -280,14 +280,14 @@ r11.1 <- terra::mask(r11, mask)
 r12s <- rast("D:/3PG_Cplusplus/output_M_18S_bs_old/ws202007.flt")
 r12f <- rast("D:/3PG_Cplusplus/output_M_18S_bs_old/wf202007.flt")
 r12 <- r12s+r12f
-#r12[r10 < 10] <- NA
+r12[r10 < 10] <- NA
 crs(r12) <- crs(mask)
 compareGeom(r12,mask)
 r12.1 <- terra::mask(r12, mask)
 
 
 # Set the maximum value for comparison
-max_value <- 280
+max_value <- 430
 
 # Define the number of color classes (adjust as needed)
 num_classes <- 10
@@ -299,7 +299,7 @@ breaks <- seq(0, max_value, length.out = num_classes + 1)
 # Plot the raster with a continuous color scale
 # PNG device
 
-png("G:/Sync/PostDoc/Figures/lp_current/r1.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r1.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r1, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
@@ -307,81 +307,81 @@ text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1910", col = "red", 
 dev.off()
 
 
-png("G:/Sync/PostDoc/Figures/lp_current/r2.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r2.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r2, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1920", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r3.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r3.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r3, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1930", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r4.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r4.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r4, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1940", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r5.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r5.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r5, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1950", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r6.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r6.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r6, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1960", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r7.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r7.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r7, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1970", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r8.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r8.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r8, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1980", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r9.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r9.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r9, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "1990", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r10.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r10.png", width = 8.2, height = 8, units = "in", res = 300)
 
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r10, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "2000", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r11.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r11.png", width = 8.2, height = 8, units = "in", res = 300)
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r11.1, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "2010", col = "red", cex = 1.5)
 dev.off()
 
-png("G:/Sync/PostDoc/Figures/lp_current/r12.png", width = 8.2, height = 8, units = "in", res = 300)
+png("G:/Sync/PostDoc/Figures/18S_bs/r12.png", width = 8.2, height = 8, units = "in", res = 300)
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r12.1, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
 text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "2019", col = "red", cex = 1.5)
 dev.off()
 
 
-
+plot(r12.1, add = TRUE, alpha = 0.9, col = viridis(100), legend = TRUE)
 
