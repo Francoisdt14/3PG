@@ -2,20 +2,25 @@ library(terra)
 library(tidyverse)
 
 # year trees were planted
-planted <- rast("D:/3PG_Cplusplus/data_100/forest_age_2019.flt")
+planted <- rast("D:/BP_Layers/M_9S/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif")
 
 # age in 2019
 age.2019 <- 2019 - planted
 
 # age in 2040
-age.2040 <- age.2019 + 21
+age.2041 <- age.2019 + 22
 
-#writeRaster(age.2040, "D:/3PG_Cplusplus/future_forest_age_input_TEST/age2040.flt", overwrite = TRUE)
+writeRaster(age.2041, "D:/3PG_Cplusplus/future_forest_age_input_TEST/future_ages_2/age2041.flt", datatype = "FLT4S", overwrite = TRUE)
+
+
 
 # Agtes in 2060, 2080, 20100
-age.2060 <- age.2019 + 41
-age.2080 <- age.2019 + 61
-age.2100 <- age.2019 + 81
+age.2061 <- age.2019 + 42
+age.2081 <- age.2019 + 62
+age.2101 <- age.2019 + 82
+
+
+
 
 # biomass inputs into the future model
 wf.input <- rast('D:/3PG_Cplusplus/future_forest_age_input_TEST/wf.flt')
