@@ -185,12 +185,38 @@ plots <- lapply(unique(sum_data$scenario), function(scenario) {
         scale_fill_manual(values = ifelse(grepl("shrub", scenario_data$RasterName), "dodgerblue4", "green4")) +
         labs(x = "RasterName", y = "Sum", fill = "RasterName") +
         ggtitle(paste("Scenario", scenario)) +
+        scale_x_continuous(limits = c(900000000, max(scenario_data$sum))) +  # Set x-axis limits
         theme(legend.position = "top") +
         theme_bw() # Set the black and white theme
 })
 
 # Display the plots
 plots
+
+# Create a separate plot for each scenario
+plots <- lapply(unique(sum_data$scenario), function(scenario) {
+    scenario_data <- subset(sum_data, scenario == scenario)
+
+    # Reorder the x-axis labels by sum (you can adjust the order as needed)
+    scenario_data$RasterName <- factor(scenario_data$RasterName, levels = unique(scenario_data$RasterName))
+
+    ggplot(scenario_data, aes(x = RasterName, y = sum, fill = RasterName)) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual(values = ifelse(grepl("shrub", scenario_data$RasterName), "dodgerblue4", "green4")) +
+        labs(x = "RasterName", y = "Sum", fill = "RasterName") +
+        ggtitle(paste("Scenario", scenario)) +
+        theme(legend.position = "top") +
+        theme_bw() +  # Set the black and white theme
+        coord_cartesian(ylim = c(900000000, max(scenario_data$sum)))
+})
+
+# Display the plots
+plots
+
+
+
+
+
 
 # Assuming you have a dataframe named 'sum_data'
 # Filter the dataframe to select only the specific scenarios you want to compare
@@ -283,14 +309,14 @@ plot_sum.fert <- ggplot(summary_data.fert, aes(x = RasterName, y = sum, fill = R
     scale_fill_manual(values = ifelse(grepl("shrub", summary_data$RasterName), "slateblue4", "seagreen4")) +
     labs(x = "RasterName", y = "Sum", fill = "RasterName") +
     ggtitle("Sum Comparison") +
-    theme(legend.position = "top")
+    theme(legend.position = "top") + theme_bw()
 
 plot_mean.fert <- ggplot(summary_data.fert, aes(x = RasterName, y = mean, fill = RasterName)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(values = ifelse(grepl("shrub", summary_data$RasterName), "slateblue4", "seagreen4")) +
     labs(x = "RasterName", y = "Mean", fill = "RasterName") +
     ggtitle("Mean Comparison") +
-    theme(legend.position = "top")
+    theme(legend.position = "top") + theme_bw()
 
 
 

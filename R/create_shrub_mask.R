@@ -98,6 +98,8 @@ shrub.mask.final <- ifel(shrub.mask2 == 0, NA, shrub.mask2)
 
 combined_raster_30m <- ifel(!is.na(fao.reclass2) | !is.na(shrub.mask.final), 1, NA)
 
+combined_raster_30m <- c(fao.reclass2, shrub.mask.final) %>% sum(na.rm = T)
+
 #writeRaster(shrub.mask.final, "D:/BP_Layers/M_9S/landcover/shrub_mask_30m.tif")
 #writeRaster(combined_raster_30m, "D:/BP_Layers/M_9S/landcover/shrub_and_FAO_30m_mask.tif")
 
@@ -115,7 +117,9 @@ shrub.agg <- terra::aggregate(shrub.mask.final, 100/res(shrub.mask.final)[1], co
 
 global(shrub.agg, "notNA")
 
-combined_raster_90m <- ifel(!is.na(fao.reclass2.agg) | !is.na(shrub.agg), 1, NA)
+#combined_raster_90m <- ifel(!is.na(fao.reclass2.agg) | !is.na(shrub.agg), 1, NA)
+
+combined_raster_90m <- c(fao.reclass2.agg, shrub.agg) %>% sum(na.rm = T)
 
 writeRaster(combined_raster_90m, "D:/BP_Layers/M_9S/landcover/shrub_and_FAO_90m_mask.tif")
 
