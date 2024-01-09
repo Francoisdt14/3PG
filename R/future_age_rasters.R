@@ -1,13 +1,44 @@
 library(terra)
 library(tidyverse)
 
+##
+# Currently: U 18 S and M 18 S
+
+# Import the tree mask - aligned to everything
+tree.mask <- rast("D:/BP_Layers/U_13N/tree_mask.tif")
+
+tree.age <- rast("D:/BP_Layers/U_13N/inputs/Forest_Age_2019_U_13N.tif")
+
+# Clamp the max age to 1869 (150 years old)
+tree.age.clamp <- clamp(tree.age, lower = 1869, upper = Inf)
+# fill in NA values to 2010 if we want to simulate trees being elsewhere
+tree.age.clamp[is.na(tree.age.clamp)] <- 2025
+# create an output directory
+out.dir = "D:/BP_Layers/U_13N/3PG_flt/4_30m_inputs_all/"
+file.name = "Forest_Age_2019_2025"
+## check geometry
+compareGeom(tree.age.clamp, tree.mask)
+## since it is TRUE - we can write it directly
+terra::writeRaster(tree.age.clamp, paste(out.dir, file.name, ".tif", sep = ""), overwrite = T)
+
+
+
+age.90 <-  terra::aggregate(tree.age.clamp, 100/res(tree.age.clamp)[1], cores = 12)
+age.90[is.na(age.90)] <- 2025
+# write tif
+terra::writeRaster(age.90, "D:/BP_Layers/U_13N/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif", overwrite = T)
+# write float
+terra::writeRaster(age.90, "D:/BP_Layers/U_13N/3PG_flt/6_90m_flt/Forest_Age_2019_2025.flt", datatype = "FLT4S", overwrite = T)
+
+#############################################################################################################################################
+
 # year trees were planted
-planted <- rast("D:/BP_Layers/M_9S/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif")
+#planted <- rast("D:/BP_Layers/M_9S/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif")
+
+planted <- rast("D:/BP_Layers/U_15S/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif")
 
 # age in 2019
 age.2019 <- 2019 - planted
-
-
 
 # Ages in 2041, 2061, 2081, 2101
 age.2041 <- age.2019 + 22
@@ -15,7 +46,7 @@ age.2061 <- age.2019 + 42
 age.2081 <- age.2019 + 62
 age.2101 <- age.2019 + 82
 
-# writeRaster(age.2041, "D:/3PG_Cplusplus/future_forest_age_input_TEST/future_ages_2/age2041.flt", datatype = "FLT4S", overwrite = TRUE)
+writeRaster(age.2041, "D:/BP_Layers/U_15S/3PG_flt/6_90m_flt_other_inputs/age.2041.flt", datatype = "FLT4S", overwrite = TRUE)
 
 # Ages in 2040, 2060, 2080 for input
 
@@ -23,9 +54,21 @@ age.2040 <- age.2019 + 21
 age.2060 <- age.2019 + 41
 age.2080 <- age.2019 + 61
 
-writeRaster(age.2080, "D:/3PG_Cplusplus/future_forest_age_input_TEST/future_ages_3/age2080.flt", datatype = "FLT4S", overwrite = TRUE)
+writeRaster(age.2040, "D:/BP_Layers/U_15S/3PG_flt/6_90m_flt_other_inputs/age.2040.flt", datatype = "FLT4S", overwrite = TRUE)
 
 
+planted <- rast("D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif")
+plot(planted)
+# age in 2019
+age.2019 <- 2019 - planted
+age.2020 <- age.2019 +1
+writeRaster(age.2020, "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_other_inputs/age.2020.flt", datatype = "FLT4S")
+age.2021 <- age.2019 +2
+writeRaster(age.2021, "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_other_inputs/age.2021.flt", datatype = "FLT4S")
+
+
+
+#####
 # biomass inputs into the future model
 wf.input <- rast('D:/3PG_Cplusplus/future_forest_age_input_TEST/wf.flt')
 ws.input <- rast('D:/3PG_Cplusplus/future_forest_age_input_TEST/ws.flt')
@@ -63,9 +106,6 @@ planted.df$focal_mean <- as.integer(round(planted.df$focal_mean))
 unique_values <- unique(planted.df$focal_mean)
 
 num_unique_values <- length(unique_values)
-
-
-
 
 test <- rast("D:/3PG_Cplusplus/future_forest_age_input_TEST/ws202007.flt")
 plot(test)
@@ -119,7 +159,7 @@ library(stringr)
 # Set the directory where the .hdr and .flt files are located
 
 #directory <- "Y:/Francois/flt_test_100_noNA"
-directory <- "D:/3PG_Cplusplus/future_forest_age_input_TEST/Y4_S2"
+directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_other_inputs"
 # Get the list of .hdr files in the directory
 hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
 
@@ -129,11 +169,11 @@ hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
 for (hdr_file in hdr_files) {
   # Define the new content for the .hdr file
   new_content <- c(
-    "NROWS          3249", # 90m = 3249 , 30m = 9745
-    "NCOLS          3249", # 90m 3249  , 30m 9746
-    "xllcenter         403650.448601884", # 90m = 403650.448601884 , 30m = 403619.663820003
-    "yllcenter         6312667.21413766", # 90m = 6312667.21413766" , 30m = 6312636.42935578"
-    "cellsize           92.35435", # 90m = 92.35435 , 30m = 30.78478
+    "NROWS          3334", # 90m = 3249 , 30m = 9745
+    "NCOLS          3334", # 90m 3249  , 30m 9746
+    "xllcenter         325620", # 90m = 403650.448601884 , 30m = 403619.663820003
+    "yllcenter         5236920", # 90m = 6312667.21413766" , 30m = 6312636.42935578"
+    "cellsize           90", # 90m = 92.35435 , 30m = 30.78478
     "nodata_value -9999.000000",
     "byteorder lsbfirst"
   )
@@ -141,7 +181,6 @@ for (hdr_file in hdr_files) {
   # Write the new content to the .hdr file, overwriting the existing contents
   writeLines(new_content, hdr_file)
 }
-
 
 
 
@@ -388,3 +427,9 @@ for (i in 1:length(co2_levels)) {
 print(result_df2)
 
 # Does this show it doesn't matter whether it changes with time?
+
+
+
+
+
+

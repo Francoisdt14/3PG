@@ -341,7 +341,7 @@ library(stringr)
 
 #directory <- "Y:/Francois/flt_test_100_noNA"
 #directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
-directory <- "D:/BP_Layers/U_13N/3PG_flt/5_90m_inputs_all"
+directory <- "D:/BP_Layers/U_13N/3PG_flt/6_90m_flt"
 
 # Get the list of .hdr files in the directory
 hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
@@ -353,8 +353,8 @@ for (hdr_file in hdr_files) {
   new_content <- c(
     "NROWS          3334", # 90m = 3334 , 30m =
     "NCOLS          3334", # 90m 3334  , 30m
-    "xllcenter         335542.4", # 90m =  325620 , 30m =
-    "yllcenter         6657053", # 90m = 5236920 , 30m =
+    "xllcenter         303300", # 90m =  325620 , 30m =
+    "yllcenter         5773260", # 90m = 5236920 , 30m =
     "cellsize           90", # 90m = 90 , 30m =
     "nodata_value -9999.000000",
     "byteorder lsbfirst"

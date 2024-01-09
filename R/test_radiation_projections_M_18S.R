@@ -298,16 +298,21 @@ for (tif_file in tif_files) {
 
 check.rast3 <- rast("D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all/PPT09.tif")
 
-###
-# We want to find the lower left center of the X and Y dimension for the header files:
-res_x <- res(check.rast3)[1]
-res_y <- res(check.rast3)[2]
+# Create the header files that match the 3PG input:
+# An original aligned tif gives us the information
+template.rast <- rast("D:/BP_Layers/U_15S/3PG_flt/5_90m_inputs_all/tmin01.tif")
 
-center_x <- xmin(raster) + res_x / 2
-center_y <- ymin(raster) + res_y / 2
-# Print the results
-print(paste("Center X:", center_x))
-print(paste("Center Y:", center_y))
+# Number of rows and columns
+rows_x <- nrow(template.rast)
+rows_y <- ncol(template.rast)
+
+# Resolution of the raster
+res_x <- res(template.rast)[1]
+res_y <- res(template.rast)[2]
+
+# We want to find the lower left center of the X and Y dimension for the header files:
+center_x <- xmin(template.rast) + res_x / 2
+center_y <- ymin(template.rast) + res_y / 2
 
 # rewrite HDR files!
 
@@ -318,33 +323,29 @@ library(stringr)
 
 #directory <- "Y:/Francois/flt_test_100_noNA"
 #directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
-directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_future/Y5_S3"
+directory <- "D:/BP_Layers/U_15S/3PG_flt/6_90m_flt"
 
 # Get the list of .hdr files in the directory
 hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
 
 # very important to write this correctly depending on raster size!!
 # Process each .hdr file
-for (hdr_file in hdr_files) {
-  # Define the new content for the .hdr file
-  new_content <- c(
-    "NROWS          3334", # 90m = 3334 , 30m =
-    "NCOLS          3334", # 90m 3334  , 30m
-    "xllcenter         325620", # 90m =  325620 , 30m =
-    "yllcenter         5236920", # 90m = 5236920 , 30m =
-    "cellsize           90", # 90m = 90 , 30m =
-    "nodata_value -9999.000000",
-    "byteorder lsbfirst"
-  )
 
-  # Write the new content to the .hdr file, overwriting the existing contents
-  writeLines(new_content, hdr_file)
+for (hdr_file in hdr_files) {
+    # Define the new content for the .hdr file
+    new_content <- c(
+        paste("NROWS         ", as.character(rows_x)),
+        paste("NCOLS         ", as.character(rows_y)),
+        paste("xllcenter        ", as.character(center_x)),
+        paste("yllcenter        ", as.character(center_y)),
+        paste("cellsize          ", as.character(res_x)),
+        "nodata_value -9999.000000",
+        "byteorder lsbfirst"
+    )
+
+    writeLines(new_content, hdr_file)
 }
 
-check.rast4 <- rast("D:/BP_Layers/M_18S/3PG_flt/2_climate_align/NFFD05.tif")
-
-
-###
 # random final checks
 
 check.raster5 <- rast("D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_future/Y5_S1/Tmin09.flt")

@@ -1,7 +1,7 @@
 # Create a latitude raster and float
 library(terra)
 # Import the tree mask - aligned to everything
-tree.mask <- rast("D:/BP_Layers/M_11S/tree_mask.tif")
+tree.mask <- rast("D:/BP_Layers/U_15S/tree_mask.tif")
 
 # Rename
 lat.mask = tree.mask
@@ -22,14 +22,15 @@ y.rast <- resample(y.rast, lat.mask, "bilinear") %>%
     focal(w = 5, fun = "mean", na.policy = "only", na.rm = T)
 
 # Write the raster
-writeRaster(y.rast, "D:/BP_Layers/M_11S/large_rasters/latitude_30m.tif")
+writeRaster(y.rast, "D:/BP_Layers/M_11S/large_rasters/latitude_30m.tif", overwrite = T)
 
 # Aggregate
 lat_90 <-  terra::aggregate(y.rast, 100/res(y.rast)[1])
 # Write again - tif and flt
+lat_90 <- round(lat_90, 3)
 
-writeRaster(lat_90, "D:/BP_Layers/M_11S/large_rasters/latitude_90m.tif")
-#writeRaster(lat_90, "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_other_inputs/latitude_90.flt", datatype = "FLT4S", overwrite = TRUE)
+#writeRaster(lat_90, "D:/BP_Layers/M_11S/large_rasters/latitude_90m.tif", overwrite = T)
+#writeRaster(lat_90, "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt_other_inputs/latitude_90m.flt", datatype = "FLT4S", overwrite = TRUE)
 
 
 #test.rast <- rast("D:/BP_Layers/M_18S/3PG_flt/5_90m_inputs_all/Tmax02.tif")

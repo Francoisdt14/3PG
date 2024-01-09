@@ -26,7 +26,8 @@ for (i in 1:length(co2_values)) {
 
 ##################################################################################
 
-alphaCx = 0.047 #canopy quantum efficiency (PARAMETER)
+alphaCx = 0.04 #canopy quantum efficiency (PARAMETER) 0.04 for lodgepole, 0.03 Black spruce
+#alphaCx = 0.03
 fNutr = 0.88
 fT = 0.980882468
 fFrost = 0.966666666666667
@@ -44,7 +45,6 @@ alphaC_values <- numeric(length(co2_values))
 for (i in 1:length(co2_values)) {
     alphaC_values[i] <- alphaCx * fNutr * fT * fFrost * fCalpha_values[i] * PhysMod
 }
-
 
 # Create separate plots for fCalpha and fCg
 par(mfrow = c(3, 1))  # Set the layout to have 2 rows and 1 column of plots
@@ -102,7 +102,7 @@ title("Required alphaCx to curve match vs. CO2")
 
 #######################################################################################
 
-# BUT - we know that PhysMod and AlphaC change over time...
+# BUT - we know that PhysMod and AlphaC change over time???
 # Trying to deal with that:
 # Constants
 co2_levels <- c(350, 500, 700)  # Include all relevant CO2 levels
@@ -116,17 +116,17 @@ fFrost <- 0.966666667
 # Define observed_alphaC and observed_PhysMod matrices or data frames
 # The dimensions should match the number of CO2 levels and times.
 
-# Example:
+# Example with 0.04 alphaCx:
 observed_alphaC <- matrix(c(
-    0.029095917, 0.021712018, 0.02343216, # CO2 = 350, time = 1, 2, 3
-    0.035115762, 0.034594885, 0.028280193, # CO2 = 500, time = 1, 2, 3
-    0.040734284, 0.040130067, 0.032805024 # CO2 = 700, time = 1, 2, 3
+    0.024762483, 0.019569831, 0.019942264, # CO2 = 350, time = 1, 2, 3
+    0.029885755, 0.029442456, 0.024068249, # CO2 = 500, time = 1, 2, 3
+    0.034667476, 0.034153249, 0.027919169 # CO2 = 700, time = 1, 2, 3
 ), nrow = length(co2_levels), byrow = TRUE)
 
 observed_PhysMod <- matrix(c(
-    0.741921238, 0.553638062, 0.597500232,  # CO2 = 350, time = 1, 2, 3
-    0.741921238, 0.730916229, 0.597500232,  # CO2 = 500, time = 1, 2, ...
-    0.741921238, 0.730916229, 0.597500232   # CO2 = 700, time = 1, 2, ...
+    0.741921238, 0.586341585, 0.597500232,  # CO2 = 350, time = 1, 2, 3
+    0.741921238, 0.730916229,0.597500232,  # CO2 = 500, time = 1, 2, ...
+    0.741921238, 0.730916229, 0.597500232# CO2 = 700, time = 1, 2, ...
 ), nrow = length(co2_levels), byrow = TRUE)
 
 # Function to calculate Required_alphaCx
