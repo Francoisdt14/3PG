@@ -3,7 +3,7 @@
 #######################
 
 # Initialize vectors to store the results
-co2_values <- seq(350, 700, by = 5)
+co2_values <- seq(350, 700, by = 1)
 fCalpha_values <- numeric(length(co2_values))
 fCg_values <- numeric(length(co2_values))
 
@@ -26,13 +26,24 @@ for (i in 1:length(co2_values)) {
 
 ##################################################################################
 
+# lodgepole pine
 alphaCx = 0.04 #canopy quantum efficiency (PARAMETER) 0.04 for lodgepole, 0.03 Black spruce
-#alphaCx = 0.03
 fNutr = 0.88
 fT = 0.980882468
 fFrost = 0.966666666666667
 #fCalpha = fCalpha_values[1]
 PhysMod = 0.741921238213433
+
+####################################################################################
+
+# black spruce
+alphaCx = 0.03 #canopy quantum efficiency (PARAMETER) 0.04 for lodgepole, 0.03 Black spruce
+fNutr = 0.726138721
+fT = 0.974693112
+fFrost = 0.966666667
+#fCalpha = fCalpha_values[1]
+PhysMod = 0.762330785
+
 
 
 # alphaC = alphaCx * fNutr * fT * fFrost * fCalpha * PhysMod
