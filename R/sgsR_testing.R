@@ -4,6 +4,7 @@ library(tidyverse)
 library(viridis)
 
 dem <- rast("D:/BP_Layers/outputs/inputs/dem_crop_M_9S.tif")
+dem <- rast("D:/BP_Layers/M_9S/dem/dem_crop_M_9S.tif")
 dem_crop <- crop(dem, volume_3pg)
 
 

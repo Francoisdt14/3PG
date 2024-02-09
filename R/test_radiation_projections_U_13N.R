@@ -326,8 +326,8 @@ check.rast3 <- rast("D:/BP_Layers/U_13N/3PG_flt/5_90m_inputs_all/PPT09.tif")
 res_x <- res(check.rast3)[1]
 res_y <- res(check.rast3)[2]
 
-center_x <- xmin(raster) + res_x / 2
-center_y <- ymin(raster) + res_y / 2
+center_x <- xmin(check.rast3) + res_x / 2
+center_y <- ymin(check.rast3) + res_y / 2
 # Print the results
 print(paste("Center X:", center_x))
 print(paste("Center Y:", center_y))
@@ -341,7 +341,7 @@ library(stringr)
 
 #directory <- "Y:/Francois/flt_test_100_noNA"
 #directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
-directory <- "D:/BP_Layers/U_13N/3PG_flt/6_90m_flt"
+directory <- "D:/BP_Layers/U_13N/biomass_3PG/fert/S3/Y4_Output"
 
 # Get the list of .hdr files in the directory
 hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
@@ -349,16 +349,16 @@ hdr_files <- list.files(directory, pattern = "\\.hdr$", full.names = TRUE)
 # very important to write this correctly depending on raster size!!
 # Process each .hdr file
 for (hdr_file in hdr_files) {
-  # Define the new content for the .hdr file
-  new_content <- c(
-    "NROWS          3334", # 90m = 3334 , 30m =
-    "NCOLS          3334", # 90m 3334  , 30m
-    "xllcenter         303300", # 90m =  325620 , 30m =
-    "yllcenter         5773260", # 90m = 5236920 , 30m =
-    "cellsize           90", # 90m = 90 , 30m =
-    "nodata_value -9999.000000",
-    "byteorder lsbfirst"
-  )
+    # Define the new content for the .hdr file
+    new_content <- c(
+        "NROWS          3334", # 90m = 3334 , 30m =
+        "NCOLS          3334", # 90m 3334  , 30m
+        "xllcenter         335542.427", # 90m =  325620 , 30m =
+        "yllcenter         6657053.047", # 90m = 5236920 , 30m =
+        "cellsize           90", # 90m = 90 , 30m =
+        "nodata_value -9999.000000",
+        "byteorder lsbfirst"
+    )
 
   # Write the new content to the .hdr file, overwriting the existing contents
   writeLines(new_content, hdr_file)
@@ -407,7 +407,6 @@ for (hdr_file in hdr_files) {
 
   cat("Projection information added to", basename(hdr_file), "\n")
 }
-
 
 
 

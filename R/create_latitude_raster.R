@@ -1,7 +1,7 @@
 # Create a latitude raster and float
 library(terra)
 # Import the tree mask - aligned to everything
-tree.mask <- rast("D:/BP_Layers/U_15S/tree_mask.tif")
+tree.mask <- rast("D:/BP_Layers/M_18S/tree_mask.tif")
 
 # Rename
 lat.mask = tree.mask
@@ -38,3 +38,4 @@ lat_90 <- round(lat_90, 3)
 
 compareGeom(test.rast,lat_90)
 
+test <- rast("D:/BP_Layers/U_15S/large_rasters/latitude_90m.tif")

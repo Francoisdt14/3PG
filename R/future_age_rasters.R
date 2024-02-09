@@ -7,12 +7,17 @@ library(tidyverse)
 # Import the tree mask - aligned to everything
 tree.mask <- rast("D:/BP_Layers/U_13N/tree_mask.tif")
 
-tree.age <- rast("D:/BP_Layers/U_13N/inputs/Forest_Age_2019_U_13N.tif")
+tree.age <- rast("D:/Landcover/francois4/Study_Area_U_thirteenN/mosaiced/age/Forest_Age_2019.dat")
+
+tree.age.proj <- terra::project(tree.age, tree.mask, threads = T, gdal = TRUE, by_util = TRUE)
 
 # Clamp the max age to 1869 (150 years old)
-tree.age.clamp <- clamp(tree.age, lower = 1869, upper = Inf)
+tree.age.clamp <- clamp(tree.age.proj, lower = 1869, upper = Inf)
 # fill in NA values to 2010 if we want to simulate trees being elsewhere
 tree.age.clamp[is.na(tree.age.clamp)] <- 2025
+
+tree.age.round <- round(tree.age.clamp, digits = 0)
+
 # create an output directory
 out.dir = "D:/BP_Layers/U_13N/3PG_flt/4_30m_inputs_all/"
 file.name = "Forest_Age_2019_2025"
@@ -24,11 +29,14 @@ terra::writeRaster(tree.age.clamp, paste(out.dir, file.name, ".tif", sep = ""), 
 
 
 age.90 <-  terra::aggregate(tree.age.clamp, 100/res(tree.age.clamp)[1], cores = 12)
-age.90[is.na(age.90)] <- 2025
+age.90.round <- round(age.90, digits = 0)
+
+age.90.round[is.na(age.90.round)] <- 2025
+
 # write tif
-terra::writeRaster(age.90, "D:/BP_Layers/U_13N/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif", overwrite = T)
+terra::writeRaster(age.90.round, "D:/BP_Layers/U_13N/3PG_flt/5_90m_inputs_all/Forest_Age_2019_2025.tif", overwrite = T)
 # write float
-terra::writeRaster(age.90, "D:/BP_Layers/U_13N/3PG_flt/6_90m_flt/Forest_Age_2019_2025.flt", datatype = "FLT4S", overwrite = T)
+terra::writeRaster(age.90.round, "D:/BP_Layers/U_13N/3PG_flt/6_90m_flt/Forest_Age_2019_2025.flt", datatype = "FLT4S", overwrite = T)
 
 #############################################################################################################################################
 
@@ -428,8 +436,8 @@ print(result_df2)
 
 # Does this show it doesn't matter whether it changes with time?
 
-
-
+test <- rast("D:/BP_Layers/M_9S/3PG_flt/6_90m_flt/Rad06.flt")
+plot(test)
 
 
 

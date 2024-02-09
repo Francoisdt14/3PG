@@ -119,26 +119,44 @@ title("Required alphaCx to curve match vs. CO2")
 co2_levels <- c(350, 500, 700)  # Include all relevant CO2 levels
 times <- c(1, 2, 3)  # Example time points in years
 fCalpha <- 1  # Constant for fCalpha
-fNutr <- 0.88
-fT <- 0.980882468
+fNutr <- 0.726138721
+fT <- 0.974693112
 fFrost <- 0.966666667
 
 # Observed data for alphaC and PhysMod over time and for different CO2 levels
 # Define observed_alphaC and observed_PhysMod matrices or data frames
 # The dimensions should match the number of CO2 levels and times.
 
+# BLOCK OF OBSERVED AlphaCx for Lodgepole
+
+# # Example with 0.04 alphaCx:
+# observed_alphaC <- matrix(c(
+#     0.024762483, 0.019569831, 0.019942264, # CO2 = 350, time = 1, 2, 3
+#     0.029885755, 0.029442456, 0.024068249, # CO2 = 500, time = 1, 2, 3
+#     0.034667476, 0.034153249, 0.027919169 # CO2 = 700, time = 1, 2, 3
+# ), nrow = length(co2_levels), byrow = TRUE)
+#
+# observed_PhysMod <- matrix(c(
+#     0.741921238, 0.586341585, 0.597500232,  # CO2 = 350, time = 1, 2, 3
+#     0.741921238, 0.730916229,0.597500232,  # CO2 = 500, time = 1, 2, ...
+#     0.741921238, 0.730916229, 0.597500232# CO2 = 700, time = 1, 2, ...
+# ), nrow = length(co2_levels), byrow = TRUE)
+
+# Block of observed alphacx for black spruce
+
 # Example with 0.04 alphaCx:
 observed_alphaC <- matrix(c(
-    0.024762483, 0.019569831, 0.019942264, # CO2 = 350, time = 1, 2, 3
-    0.029885755, 0.029442456, 0.024068249, # CO2 = 500, time = 1, 2, 3
-    0.034667476, 0.034153249, 0.027919169 # CO2 = 700, time = 1, 2, 3
+    0.015646923, 0.0156164504985154, 0.0151716639727478, # CO2 = 350, time = 1, 2, 3
+    0.0188842175850262, 0.0188474402568289, 0.0183106289326267, # CO2 = 500, time = 1, 2, 3
+    0.0219056923986304, 0.0218630306979215, 0.021240329561847 # CO2 = 700, time = 1, 2, 3
 ), nrow = length(co2_levels), byrow = TRUE)
 
 observed_PhysMod <- matrix(c(
-    0.741921238, 0.586341585, 0.597500232,  # CO2 = 350, time = 1, 2, 3
-    0.741921238, 0.730916229,0.597500232,  # CO2 = 500, time = 1, 2, ...
-    0.741921238, 0.730916229, 0.597500232# CO2 = 700, time = 1, 2, ...
+    0.762330785099297, 0.760846133201368, 0.739175772944888,  # CO2 = 350, time = 1, 2, 3
+    0.762330785099297, 0.760846133201368,0.739175772944888,  # CO2 = 500, time = 1, 2, ...
+    0.762330785099297, 0.760846133201368, 0.739175772944888# CO2 = 700, time = 1, 2, ...
 ), nrow = length(co2_levels), byrow = TRUE)
+
 
 # Function to calculate Required_alphaCx
 calculate_required_alphaCx <- function(alphaC, PhysMod) {
