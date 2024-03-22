@@ -25,6 +25,8 @@ lc.proj <- terra::project(landcover, mask.30m, threads = T, gdal = TRUE, by_util
 #write landcover for future use if necessary
 terra::writeRaster(lc.proj, paste(out.dir, "landcover_30m.tif", sep = ""), overwrite = T)
 
+lc.proj <- rast('D:/BP_Layers/M_9S/landcover/landcover_30m_old.tif')
+
 # vlce codes
 vlce <- read.csv("D:/BP_Layers/M_9S/vlce.csv")
 
@@ -38,20 +40,36 @@ xnum.ShBr[!xnum.ShBr %in% c(40, 50, 100)] <- NA # here we want to keep the bryoi
 xnum.ShBr[!is.na(xnum.ShBr)] <- 1 # set the desired landcovers to 1
 
 
-# Shrubs and herbs here - No BRYOID (50)... Need a version with and without
+# Shrubs and herbs here - No BRYOID (40)... Need a version with and without
 xnum.Sh <- as.numeric(x)
-xnum.Sh[!xnum.Sh %in% c(40, 100)] <- NA
+xnum.Sh[!xnum.Sh %in% c(50, 100)] <- NA
+
+
+###### Checking the sum values for each class...
+test_data_frame <- as.data.frame(xnum.Sh)
+# Use table to get counts of each unique value
+category_counts <- table(test_data_frame$category)
+# Convert to a dataframe
+df_counts <- as.data.frame(category_counts)
+
+# Print the resulting dataframe
+print(df_counts)
+#################################################
+
+# set them all to 1
 xnum.Sh[!is.na(xnum.Sh)] <- 1
 
 # STEP 3 - load FAO FOREST. Use mask to identify future growth ... mask out in scenarios
 
 # Load the FAO forest
-
 # Crop and project to the correct study area
 # This could be tricky depending on study area
+
 fao.crop <- crop(fao, landcover)
 fao.proj <- terra::project(fao.crop, mask.30m, threads = T, gdal = TRUE, by_util = TRUE)
 
+# if it is already written:
+fao.proj <- rast("D:/BP_Layers/U_13N/landcover/fao_forest_30m.tif")
 ####### IF FAIL #############
 
 # load in vector of study area
@@ -73,6 +91,7 @@ fao.reclass.inverse <- ifel(!is.na(fao.reclass2), 0, 1)
 
 # multiply for areas to remove any potential overlap
 ShBy.mask <- xnum.ShBr * fao.reclass.inverse
+
 Sh.mask <- xnum.Sh * fao.reclass.inverse
 
 #create NA

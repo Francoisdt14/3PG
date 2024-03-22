@@ -41,9 +41,9 @@ for (area in study_areas) {
     # Load the masks
     fao_mask <- rast(file.path("D:/BP_Layers", area, "landcover/fao_forest_90m.tif"))
     Sh_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_90m.tif"))
-    ShBy_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_Bry_90m.tif"))
-    Sh_fao_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_fao_90m.tif"))
-    ShBy_fao_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_Bry_fao_90m.tif"))
+    #ShBy_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_Bry_90m.tif"))
+    #Sh_fao_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_fao_90m.tif"))
+    #ShBy_fao_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_Bry_fao_90m.tif"))
 
     # Get the EPSG code from fao.mask
     epsg_code <- crs(fao_mask, describe = T)$code
@@ -54,8 +54,8 @@ for (area in study_areas) {
 
     # Create a list of scenarios and masks
     scenarios <- list(s1, s2, s3)
-    mask_names <- c("fao_mask", "Sh_mask", "ShBy_mask", "Sh_fao_mask", "ShBy_fao_mask")
-
+    #mask_names <- c("fao_mask", "Sh_mask", "ShBy_mask", "Sh_fao_mask", "ShBy_fao_mask")
+    mask_names <- c("Sh_mask")
     # Create and save masked rasters
     masked_rasters <- list()
 
@@ -77,6 +77,33 @@ for (area in study_areas) {
         }
     }
 }
+
+###################################################################################
+# RE-SAMPLE THE M_9S Areas HERE! - they need to be at exactly 90 meters
+
+test.rast <- rast("D:/BP_Layers/M_9S/analysis/s1_Sh_mask_old.tif")
+# Assuming 'raster_data' is the name of your raster object
+# Replace 'raster_data' with the actual name of your raster object
+
+# Define the target resolution and extent
+target_res <- 90  # Target resolution in x and y directions
+target_ex <- ext(test.rast)  # Use the extent of the original raster
+# Define the target CRS
+target_crs <- "EPSG:32609"  # Replace with your desired CRS, e.g., "EPSG:32630" for UTM zone 30N
+# Create a new raster with the target extent, resolution, and CRS
+target_raster <- rast(target_ex, res = target_res, crs = target_crs)
+
+# Resample the original raster to the target resolution
+resampled_raster <- resample(test.rast, target_raster, method = "near", threads = T)
+
+#writeRaster(resampled_raster, "D:/BP_Layers/M_9S/analysis/s1_Sh_mask.tif")
+
+#test.rast2 <- rast("D:/BP_Layers/M_9S/analysis/s1_Sh_mask.tif")
+
+###################################################################################
+# WE ARE HERE
+ # - remove the old tifs in analysis
+ # - need to re-run the fertilized areas
 
 ###################################################################################
 # Specify study areas
@@ -158,52 +185,41 @@ final_summary_df2 <- final_summary_df2 %>%
 
 #write.csv(final_summary_df2, file = "D:/BP_Layers/analysis/study_area_summary_no_fert.csv", row.names = FALSE)
 
-final_df_summary_df3 <- rbind(final_summary_df2, final_summary_df2_fert)
+##################################################################################
+
+# Read in datasets created above
+
+final_summary_df2 <- read.csv("D:/BP_Layers/analysis/study_area_summary_no_fert.csv")
+final_summary_df_fert2 <- read.csv("D:/BP_Layers/analysis/study_area_summary_fert.csv")
+
+final_df_summary_df3 <- rbind(final_summary_df2, final_summary_df_fert2)
 
 # Assuming 'final_summary_df' is your dataframe
 final_summary_df4 <- final_df_summary_df3 %>%
     mutate(total_biomass = Sum* (90 * 90) / 10000)
 
-
 #write.csv(final_summary_df4, file = "D:/BP_Layers/analysis/study_area_summary_all.csv", row.names = FALSE)
 
 final_summary_df3 <- read.csv("D:/BP_Layers/analysis/study_area_summary_all.csv")
 
-# Filter the dataframe to include only 'Sh' and 'ShBy' rows
-ShBy_df <- final_summary_df3 %>%
-    filter(grepl("ShBy", Raster) & !grepl("_fao", Raster) & !grepl("Y", Fert))
-
 # Only keep the Shrub layer
 Sh_df <- final_summary_df3 %>%
-    filter(grepl("Sh", Raster) & !grepl("ShBy", Raster) & !grepl("_fao", Raster) & !grepl("Y", Fert))
+    filter(grepl("Sh", Raster) & !grepl("ShBy", Raster) & !grepl("_fao", Raster) & !grepl("N", Fert))
+
+# Only keep the Shrub layer
+Sh_df_all <- final_summary_df3 %>%
+    filter(grepl("Sh", Raster) & !grepl("ShBy", Raster) & !grepl("_fao", Raster))
 
 # FAO
 # Filter the dataframe to include only fao rows
 fao_df <- final_summary_df3 %>%
     filter(!grepl("ShBy|Sh", Raster) & !grepl("Y", Fert))
 
-#
-#filtered_df4 <- final_summary_df3 %>%
-# filter(!grepl("_", Raster))
-
-# Only keep the Shrub layers
-Sh_ShBy_df <- final_summary_df3 %>%
-    filter(grepl("Sh", Raster) & !grepl("_fao", Raster) & !grepl("Y", Fert))
-
 
 # Create a bar graph with facets for Sum values
 ggplot(fao_df, aes(x = Study_Area, y = total_biomass, fill = Study_Area)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
     facet_wrap(~Scenario, scales = "free") +
-    labs(title = "Total Biomass in the FAO Forest Layer by Study Area and Scenario",
-         x = "Study Area", y = "Total Biomass (Tons)") +
-    theme_bw()
-
-
-# Create a bar graph with facets for Sum values
-ggplot(ShBy_df, aes(x = Study_Area, y = total_biomass, fill = Scenario)) +
-    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
-    facet_wrap(~Study_Area, scales = "free") +
     labs(title = "Total Biomass in the FAO Forest Layer by Study Area and Scenario",
          x = "Study Area", y = "Total Biomass (Tons)") +
     theme_bw()
@@ -216,17 +232,6 @@ ggplot(fao_df, aes(x = Study_Area, y = Mean, ymin = p25, lower = p25, middle = M
     labs(title = "Mean Aboveground Biomass (ABG, tons/ha) by Study Area and Scenario - Forested Areas", x = "Study Area", y = "Mean ABG (tons/ha) ") +
     theme_bw()
 
-# Create the plot to compare the mean_per_hectare by scenario and managed
-ggplot(Sh_ShBy_df, aes(x = Scenario, y = Mean, color = Raster, shape = Managed, label = Study_Area)) +
-    geom_point(position = position_dodge(width = 0.5)) +
-    geom_text_repel(position = position_dodge(width = 0.5), box.padding = 0.5) +
-    labs(title = "Mean Aboveground Biomass (ABG, per Hectare) Across Different Climate Scenarios for Different Masks", x = "Scenario", y = "Mean Biomass (Tons per Hectare)", color = "Mask", shape = "Managed/Unmanaged") +
-    scale_color_manual(values = c("ShBy" = "blue", "Sh" = "red")) +
-    scale_shape_manual(values = c("M" = 16, "U" = 17)) +
-    facet_wrap(~Scenario, scales = "free") +
-    theme_bw()
-
-
 #######################################################################################
 # Create a box plot faceted by Study Area and Scenario JUST SHRUBS
 ggplot(Sh_df, aes(x = Study_Area, y = Mean, ymin = p25, lower = p25, middle = Mean, upper = p75, ymax = p75, fill = Study_Area)) +
@@ -235,28 +240,10 @@ ggplot(Sh_df, aes(x = Study_Area, y = Mean, ymin = p25, lower = p25, middle = Me
     labs(title = "Mean Values by Study Area and Scenario", x = "Study Area", y = "Mean Value") +
     theme_bw()
 
-# Create a box plot faceted by Study Area and Scenario SHRUBS AND BRYOIDS
-ggplot(ShBy_df, aes(x = Study_Area, y = Mean, ymin = p25, lower = p25, middle = Mean, upper = p75, ymax = p75, fill = Study_Area)) +
-    geom_boxplot(stat = "identity", position = position_dodge(width = 0.9)) +
-    facet_wrap(~ Scenario, scales = "free") +
-    labs(title = "Mean Values by Study Area and Scenario", x = "Study Area", y = "Mean Value") +
-    theme_bw()
-
-
-
-
-# Create a box plot faceted by Study Area and Scenario SHRUBS AND BRYOIDS
-ggplot(ShBy_df, aes(x = Scenario, y = Mean, ymin = p25, lower = p25, middle = Mean, upper = p75, ymax = p75, fill = Scenario)) +
-    geom_boxplot(stat = "identity", position = position_dodge(width = 0.9)) +
-    facet_wrap(~ Study_Area, scales = "free") +
-    labs(title = "Mean Values by Study Area and Scenario", x = "Study Area", y = "Mean Value") +
-    theme_bw()
-
-
 
 ############################################################################################
 # Create a bar graph with facets for Sum values
-ggplot(ShBy_df, aes(x = Study_Area, y = total_biomass, fill = Scenario)) +
+ggplot(Sh_df, aes(x = Study_Area, y = total_biomass, fill = Scenario)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
     facet_wrap(~Study_Area, scales = "free") +
     labs(title = "Total Biomass in the FAO Forest Layer by Study Area and Scenario",
@@ -267,8 +254,8 @@ ggplot(ShBy_df, aes(x = Study_Area, y = total_biomass, fill = Scenario)) +
 ##########
 
 # Find the minimum total biomass value for each study area
-min_values <- aggregate(total_biomass ~ Study_Area, ShBy_df, min)
-max_values <- aggregate(total_biomass ~ Study_Area, ShBy_df, max)
+min_values <- aggregate(total_biomass ~ Study_Area, Sh_df, min)
+max_values <- aggregate(total_biomass ~ Study_Area, Sh_df, max)
 
 # Subtract a specific amount (e.g., 500,000) from each minimum total biomass
 #min_values$start_value <- min_values$total_biomass - 1000000
@@ -276,18 +263,20 @@ min_values$start_value <- min_values$total_biomass - 500000
 max_values$end_value <- max_values$total_biomass + 500000
 
 # Merge the minimum values back to the original dataframe
-ShBy_df_2 <- merge(ShBy_df, min_values[c("Study_Area", "start_value")], by = "Study_Area")
-ShBy_df_3 <- merge(ShBy_df_2, max_values[c("Study_Area", "end_value")], by = "Study_Area") %>%
+Sh_df_2 <- merge(Sh_df, min_values[c("Study_Area", "start_value")], by = "Study_Area")
+Sh_df_3 <- merge(Sh_df_2, max_values[c("Study_Area", "end_value")], by = "Study_Area") %>%
     mutate(total_biomass = round(total_biomass, 0)) %>%
     mutate(start_value = round(start_value, 0)) %>%
     mutate(end_value = round(end_value, 0))
 ##########################################################################################################################
+library(gridExtra)
+
 area_plots <- list()
 
 # Loop through unique Study_Area in the dataframe
-for (selected_area in unique(ShBy_df_3$Study_Area)) {
+for (selected_area in unique(Sh_df_3$Study_Area)) {
     # Subset the dataframe for the current Study_Area
-    subset_df <- ShBy_df_3[ShBy_df_3$Study_Area == selected_area, ]
+    subset_df <- Sh_df_3[Sh_df_3$Study_Area == selected_area, ]
 
     # Plotting total_biomass against Scenario for the current Study_Area
     area_plot <- ggplot(subset_df, aes(x = Scenario, y = total_biomass)) +
@@ -308,64 +297,38 @@ for (selected_area in unique(ShBy_df_3$Study_Area)) {
 grid.arrange(grobs = area_plots, ncol = 2)  # Adjust ncol as needed
 
 
+#########################################################
+
+mean_plots <- list()
+
+# Loop through unique Study_Area in the dataframe
+for (selected_area in unique(Sh_df_3$Study_Area)) {
+    # Subset the dataframe for the current Study_Area
+    subset_df <- Sh_df_3[Sh_df_3$Study_Area == selected_area, ]
+
+    # Plotting total_biomass against Scenario for the current Study_Area
+    mean_plot <- ggplot(subset_df, aes(x = Scenario, y = Mean)) +
+        geom_bar(stat = "identity", aes(fill = Scenario), width = 0.7, color = "black") +
+        geom_text(aes(label = Mean), vjust = -0.2) +
+        scale_fill_manual(values = brewer.pal(8, "Set2")) +
+        theme_classic() +
+        theme(legend.position = "none",
+              axis.title.y = element_text(hjust = 1)) +
+        ggtitle(paste("Total Biomass vs Scenario for", selected_area)) #+
+        #coord_cartesian(ylim = c(min(subset_df$start_value), max(subset_df$end_value)))
+
+    # Add the plot to the list
+    mean_plots[[selected_area]] <- mean_plot
+}
+
+# Arrange and print the plots
+grid.arrange(grobs = mean_plots, ncol = 2)  # Adjust ncol as needed
+
 
 #############################################################################################################################
 
-a <- ShBy_df_3 %>%
-    filter(Study_Area == 'M_18S') %>%
-    dplyr::select(Study_Area, Scenario, total_biomass, start_value, end_value)
-
-
-lower <- a %>%
-    ggplot(aes(x = Scenario, y = total_biomass)) +
-    geom_bar(stat = "identity", aes(fill = Scenario),
-             width = 0.7, color = "black") +
-    geom_text(aes(label = total_biomass), vjust = -0.2) +
-    scale_fill_manual(values = brewer.pal(8, "Set2")) +
-    theme_classic() +
-    theme(legend.position = "none",
-          axis.title.y = element_text(hjust =1 )) +
-    coord_cartesian(ylim = c(a$start_value[1], a$end_value[1]))
-
-
-# Subset the dataframe for the specified study area
-plot_data <- ShBy_df_3 %>%
-    dplyr::select(Study_Area, Scenario, total_biomass, start_value, end_value)
-
-# Create a bar plot with facets for each study area
-ggplot(plot_data, aes(x = Scenario, y = total_biomass)) +
-    geom_bar(stat = "identity", aes(fill = Scenario),
-             width = 0.7, color = "black") +
-    geom_text(aes(label = total_biomass), vjust = -0.2) +
-    scale_fill_manual(values = brewer.pal(8, "Set2")) +
-    theme_classic() +
-    theme(legend.position = "none",
-          axis.title.y = element_text(hjust = 1)) +
-    facet_grid(Study_Area ~ ., scales = "free_y") +
-    coord_cartesian(ylim = c(min(plot_data$start_value), max(plot_data$end_value)))
-
-
-
 # Create a bar graph with facets for total biomass values
-ggplot(ShBy_df_2, aes(x = Study_Area, y = total_biomass - start_value, fill = Scenario)) +
-    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
-    facet_wrap(~Study_Area, scales = "free") +
-    labs(title = "Total Biomass in the FAO Forest Layer by Study Area and Scenario",
-         x = "Study Area", y = "Total Biomass (Tons)") +
-    theme_bw()
-
-
-ggplot(ShBy_df_2, aes(x = Scenario, y = total_biomass - start_value, fill = Scenario)) +
-    geom_col(position = "dodge", width = 0.7, aes(ymin = start_value)) +
-    facet_wrap(~Study_Area, scales = "free") +
-    labs(title = "Total Biomass in the FAO Forest Layer by Study Area and Scenario",
-         x = "Scenario", y = "Total Biomass (Tons)",
-         subtitle = "Start value reflected on Y-axis") +
-    theme_bw()
-
-
-# Create a bar graph with facets for total biomass values
-ggplot(ShBy_df_2, aes(x = Scenario, y = total_biomass - start_value, fill = Scenario)) +
+ggplot(Sh_df_2, aes(x = Scenario, y = total_biomass - start_value, fill = Scenario)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
     facet_wrap(~Study_Area) +
     labs(title = "Total Biomass in the FAO Forest Layer by Study Area and Scenario",
@@ -373,46 +336,12 @@ ggplot(ShBy_df_2, aes(x = Scenario, y = total_biomass - start_value, fill = Scen
          subtitle = "Start value reflected on Y-axis") +
     theme_bw()
 
-##########
-# MAYBE
-
-# Set a threshold for the y-axis
-threshold <- 7.5e8
-
-# Plot for the overall sum for each scenario and study area
-p <- ggplot(filtered_df3, aes(x = Study_Area, y = Sum, fill = Scenario)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    labs(title = "Overall Sum by Study Area and Scenario",
-         x = "Study Area",
-         y = "Overall Sum") +
-    theme_minimal()
-
-# Set y-axis limits
-p + coord_cartesian(ylim = c(threshold, max(final_summary_df3$Sum)))
-
-
-
-
-
-
 #############################################
 
 
-# More testing
-# Can we load the data for multiple years (ws + wf and plot them over time?)
-# Per study area? On the same plot?
-# Relative to '0' ?
 
-
-
-# Biomass by elevation
-
-
-
-
-
-#############################################################
-# Data over time - THIS IS TO PRESENT TIME
+#################### Data over time - THIS IS TO PRESENT TIME #########################################
+# Data over time - THIS IS TO PRESENT TIME - redo this biomass from 2020 - 2050 as a bar?
 
 
 # Create an empty data frame to store the results
@@ -482,8 +411,6 @@ test_df_2 <- test_df %>%
 test_df_2 <- test_df %>%
     mutate(total_biomass = sum * (90 * 90) / 10000)
 
-
-##############################################################
 # plots
 
 # Assuming your dataframe is named test_df
@@ -498,8 +425,6 @@ comb_mean_plot <- ggplot(test_df_2, aes(x = year, y = mean, color = area)) +
 
 # Print the plot
 print(comb_mean_plot)
-###############################################################
-
 
 # Assuming your dataframe is named test_df
 # If it's named differently, replace test_df with your actual dataframe name
@@ -526,8 +451,6 @@ for (selected_area in unique(test_df$area)) {
 # Arrange and print the plots
 grid.arrange(grobs = mean_plots, ncol = 2)  # Adjust ncol as needed
 
-######################################################################
-
 # Create a list to store plots
 sum_plots <- list()
 
@@ -550,12 +473,245 @@ for (selected_area in unique(test_df$area)) {
 # Arrange and print the plots
 grid.arrange(grobs = sum_plots, ncol = 2)  # Adjust ncol as needed
 
-###########################################################################
+################# Data over time - 2020-2050 ##########################################################
 
+# looking at 2020 to 2050 under different scenarios...
+# Create an empty data frame to store the results
+test_df <- data.frame(area = character(), variable = character(), year = character(), mean = numeric(), sum = numeric(), min = numeric(), max = numeric(), sd = numeric(), stringsAsFactors = FALSE)
+# study areas
+areas <- c("M_9S", "M_11S", "M_18S", "U_18S", "U_15S", "U_13N")
+
+# Loop through each study area
+for (area in areas) {
+    # Set the folder paths where raster files are located
+    folder_path_1 <- file.path("D:/BP_Layers", area, "biomass_3PG", "S1", "Y2_Output")
+    folder_path_2 <- file.path("D:/BP_Layers", area, "biomass_3PG", "S1", "Y3_Output")
+
+    # Define the patterns to match filenames
+    pattern_ws <- "ws\\d{6}\\.flt"  # Pattern for 'ws' rasters
+    pattern_wf <- "wf\\d{6}\\.flt"  # Pattern for 'wf' rasters
+
+    # List raster files matching the patterns in the folders
+    raster_files_ws_1 <- list.files(folder_path_1, pattern = pattern_ws, full.names = TRUE)
+    raster_files_wf_1 <- list.files(folder_path_1, pattern = pattern_wf, full.names = TRUE)
+    raster_files_ws_2 <- list.files(folder_path_2, pattern = pattern_ws, full.names = TRUE)
+    raster_files_wf_2 <- list.files(folder_path_2, pattern = pattern_wf, full.names = TRUE)
+
+    # Combine the raster files
+    raster_files_combined_ws <- c(raster_files_ws_1, raster_files_ws_2)
+    raster_files_combined_wf <- c(raster_files_wf_1, raster_files_wf_2)
+
+    # Read in and combine ws rasters
+    ws_rasters <- lapply(raster_files_combined_ws, rast)
+
+    # Read in and combine wf rasters
+    wf_rasters <- lapply(raster_files_combined_wf, rast)
+
+    # Load the mask
+    sh_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_90m.tif"))
+
+    # Get the EPSG code from fao.mask
+    epsg_code <- crs(sh_mask, describe = T)$code
+
+    # Set the CRS of combined ws and wf rasters using the extracted EPSG code
+    ws_rasters <- lapply(ws_rasters, function(x) {crs(x) <- paste0("EPSG:", epsg_code); return(x)})
+    wf_rasters <- lapply(wf_rasters, function(x) {crs(x) <- paste0("EPSG:", epsg_code); return(x)})
+
+    # Combine ws and wf rasters based on their date (e.g., '202007')
+    #combined_rasters <- ws_rasters + wf_rasters
+
+    # Combine ws and wf rasters based on their date (e.g., '202007')
+    combined_rasters <- Map(function(x, y) x + y, ws_rasters, wf_rasters)
+
+
+    masked_rasters <- lapply(combined_rasters, function(r) terra::mask(r, sh_mask))
+
+    # Calculate global statistics for each masked raster
+    stats_list <- lapply(masked_rasters, function(r) global(r, c("mean", "sum", "min", "max", "sd"), na.rm = TRUE))
+
+    # Extract information from the filename and create a new row for each study area
+    for (i in seq_along(masked_rasters)) {
+        year <- substr(basename(raster_files_combined_ws[i]), 3, 6)
+        new_row <- data.frame(area = area, variable = "combined", year = year,
+                              mean = stats_list[[i]][1], sum = stats_list[[i]][2],
+                              min = stats_list[[i]][3], max = stats_list[[i]][4],
+                              sd = stats_list[[i]][5])
+        test_df <- rbind(test_df, new_row)
+    }
+
+    # Print the completed study area
+    cat("Study area", area, "completed\n")
+}
+
+rownames(test_df) <- NULL
+
+# Print the resulting data frame
+print(test_df)
+
+# Write the resulting data frame to a CSV file
+#write.csv(test_df, file = "D:/BP_Layers/analysis/study_areas_over_time_1870-2020.csv", row.names = FALSE)
+
+# Create a new column 'managed' by extracting first two characters from 'area'
+test_df$managed <- substr(test_df$area, 1,1)
+
+# Create a new column 'total_biomass' by calculating total biomass per hectare
+test_df$total_biomass <- test_df$sum * (90 * 90) / 10000
+
+# Plotting mean vs year, colored by area
+comb_mean_plot <- ggplot(test_df, aes(x = year, y = mean, color = area)) +
+    geom_point() +
+    labs(x = "Year",
+         y = "Mean Biomass (tons/ha)") +
+    theme_bw()
+
+# Print the plot
+print(comb_mean_plot)
 
 ##########################################################################
 
+# Create an empty data frame to store the results
+test_df <- data.frame(area = character(), scenario = character(), variable = character(), year = character(), mean = numeric(), sum = numeric(), min = numeric(), max = numeric(), sd = numeric(), stringsAsFactors = FALSE)
 
+# study areas
+areas <- c("M_9S", "M_11S", "M_18S", "U_18S", "U_15S") #, "U_13N")
+scenarios <- c("S1", "S2", "S3")
+
+# Loop through each study area and scenario
+for (area in areas) {
+    for (scenario in scenarios) {
+
+        # Set the folder paths where raster files are located
+        folder_path_1 <- file.path("D:/BP_Layers", area, "biomass_3PG", scenario, "Y2_Output")
+        folder_path_2 <- file.path("D:/BP_Layers", area, "biomass_3PG", scenario, "Y3_Output")
+
+        # Define the patterns to match filenames
+        pattern_ws <- "ws\\d{6}\\.flt"  # Pattern for 'ws' rasters
+        pattern_wf <- "wf\\d{6}\\.flt"  # Pattern for 'wf' rasters
+
+        # List raster files matching the patterns in the folders
+        raster_files_ws_1 <- list.files(folder_path_1, pattern = pattern_ws, full.names = TRUE)
+        raster_files_wf_1 <- list.files(folder_path_1, pattern = pattern_wf, full.names = TRUE)
+        raster_files_ws_2 <- list.files(folder_path_2, pattern = pattern_ws, full.names = TRUE)
+        raster_files_wf_2 <- list.files(folder_path_2, pattern = pattern_wf, full.names = TRUE)
+
+        # Combine the raster files
+        raster_files_combined_ws <- c(raster_files_ws_1, raster_files_ws_2)
+        raster_files_combined_wf <- c(raster_files_wf_1, raster_files_wf_2)
+
+        # Read in and combine ws rasters
+        ws_rasters <- lapply(raster_files_combined_ws, rast)
+
+        # Read in and combine wf rasters
+        wf_rasters <- lapply(raster_files_combined_wf, rast)
+
+        # Load the mask
+        sh_mask <- rast(file.path("D:/BP_Layers", area, "landcover/Sh_90m.tif"))
+
+        # Get the EPSG code from fao.mask
+        epsg_code <- crs(sh_mask, describe = T)$code
+
+        # Set the CRS of combined ws and wf rasters using the extracted EPSG code
+        ws_rasters <- lapply(ws_rasters, function(x) {crs(x) <- paste0("EPSG:", epsg_code); return(x)})
+        wf_rasters <- lapply(wf_rasters, function(x) {crs(x) <- paste0("EPSG:", epsg_code); return(x)})
+
+        # Combine ws and wf rasters based on their date (e.g., '202007')
+        #combined_rasters <- ws_rasters + wf_rasters
+
+        # Combine ws and wf rasters based on their date (e.g., '202007')
+        combined_rasters <- Map(function(x, y) x + y, ws_rasters, wf_rasters)
+
+
+        masked_rasters <- lapply(combined_rasters, function(r) terra::mask(r, sh_mask))
+
+        # Calculate global statistics for each masked raster
+        stats_list <- lapply(masked_rasters, function(r) global(r, c("mean", "sum", "min", "max", "sd"), na.rm = TRUE))
+
+
+        # Extract information from the filename and create a new row for each study area and scenario
+        for (i in seq_along(masked_rasters)) {
+            year <- substr(basename(raster_files_combined_ws[i]), 3, 6)
+            new_row <- data.frame(area = area, scenario = scenario, variable = "combined", year = year,
+                                  mean = stats_list[[i]][1], sum = stats_list[[i]][2],
+                                  min = stats_list[[i]][3], max = stats_list[[i]][4],
+                                  sd = stats_list[[i]][5])
+            test_df <- rbind(test_df, new_row)
+        }
+
+        # Print the completed study area and scenario
+        cat("Study area", area, "under scenario", scenario, "completed\n")
+    }
+}
+
+# Print the resulting data frame
+print(test_df)
+
+# Write the resulting data frame to a CSV file
+#write.csv(test_df, file = "D:/BP_Layers/analysis/study_areas_over_time_1870-2020.csv", row.names = FALSE)
+
+# Create a new column 'managed' by extracting first two characters from 'area'
+test_df$managed <- substr(test_df$area, 1,1)
+
+# Create a new column 'total_biomass' by calculating total biomass per hectare
+test_df$total_biomass <- test_df$sum * (90 * 90) / 10000
+
+# Plot the mean biomass of each study area and scenario, faceted by study area
+library(ggplot2)
+library(scales)
+
+mean_biomass_plot <- ggplot(test_df, aes(x = year, y = mean, fill = scenario)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    facet_wrap(~area) +
+    labs(x = "Year", y = "Mean Biomass (tons/ha)") +
+    theme_bw()
+
+# Print the plot
+print(mean_biomass_plot)
+
+# Create a bar plot with different y-axes for each facet
+total_biomass_plot <- ggplot(test_df, aes(x = year, y = total_biomass, fill = scenario)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    facet_wrap(~area, scales = "free_y") +  # Add scales = "free_y" to allow different y-axes for each facet
+    labs(x = "Year", y = "Total Biomass (tDM)") +
+    theme_bw()
+
+# Print the plot
+print(total_biomass_plot)
+
+
+# Convert 'year' to factor for better visualization
+test_df_fut <- test_df
+test_df_fut$year <- factor(test_df_fut$year)
+# Convert 'scenario' to factor to control the order
+test_df_fut$scenario <- factor(test_df_fut$scenario, levels = c("S1", "S2", "S3"))
+test_df_fut$area <- factor(test_df_fut$area)
+
+# Define custom colors for the study areas
+custom_colors <- c("M_9S" = "aquamarine", "M_11S" = "cadetblue", "M_18S" = "hotpink2", "U_18S" = "lightsalmon", "U_15S" = "brown")
+
+#"brown"
+# Update the plot to customize the colors for the study areas and differentiate between managed and unmanaged plots
+mean_biomass_point_plot <- ggplot(test_df_fut, aes(x = year, y = mean, color = area, shape = scenario, fill = managed)) +
+    geom_jitter(position = position_dodge(width = 0.5), size = 3) +
+    labs(x = "Year", y = "Mean Biomass (tons/ha)") +
+    scale_shape(solid = TRUE) +
+    scale_color_manual(values = custom_colors) +  # Customize colors for the study areas
+    scale_fill_manual(values = c("managed" = "lightgray", "unmanaged" = "white")) +  # Differentiate between managed and unmanaged plots
+    theme_bw() +
+    theme(aspect.ratio = 1)
+
+
+# Create the ggplot
+mean_biomass_point_plot <- ggplot(test_df_fut, aes(x = year, y = mean, color = area, shape = scenario, fill = scenario)) +
+    geom_jitter(position = position_dodge(width = 0.5), size = 3) +
+    labs(x = "Year", y = "Mean Biomass (tons/ha)") +
+    scale_shape(solid = TRUE) +
+    theme_bw()
+
+
+# Print the plot
+print(mean_biomass_point_plot)
+
+#########################################################################
 ######################################################################
 ############################## LOOK AT Each individual raster ########
 
@@ -760,7 +916,7 @@ scenarios <- c("s1", "s2", "s3")
 study_areas <- c("M_9S", "M_11S", "M_18S", "U_18S", "U_15S", "U_13N")
 
 # Find the minimum number of rows
-min_rows <- min(sapply(all_dfs, function(df_list) min(sapply(df_list, nrow))))
+#min_rows <- min(sapply(all_dfs, function(df_list) min(sapply(df_list, nrow))))
 
 # Process all rasters for each scenario and study area
 all_dfs <- lapply(scenarios, function(scenario) {
@@ -805,14 +961,15 @@ plot_grid(violin_plot + theme(legend.position="none"),
 # Create a violin plot with an overlaid box plot for each study area, faceted by the study area
 violin_plot <- ggplot(final_df_long, aes(x = scenario, y = value, fill = scenario)) +
     geom_violin(position = position_dodge(width = 0.9), color = "black") +
-    geom_boxplot(position = position_dodge(width = 0.9), width = 0.2, fill = "white", color = "black") +
+    geom_boxplot(position = position_dodge(width = 0.9), width = 0.2, fill = "white", color = "black",outlier.shape = NA) +
     stat_summary(fun = mean, geom = "point", position = position_dodge(width = 0.9), shape = 18, size = 3, color = "darkgreen") +
     labs(title = "Distribution of biomass values under different scenarios", x = "Scenario", y = "Biomass (tons/ha)") +
     scale_fill_manual(values = c("aquamarine", "cadetblue", "hotpink2")) +
     theme_minimal() +
     facet_wrap(~ study_area, ncol=3) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    coord_cartesian(ylim = c(20, 150))
+    coord_cartesian(ylim = c(20, 120)) +
+    theme(aspect.ratio = 3/2)
 
 # Plot the violin plots side by side using cowplot
 print(violin_plot)
@@ -881,7 +1038,7 @@ ggplot(df_s_ShBy_long, aes(x = variable, y = value)) +
 
 # Filter the dataframe to include only 'Sh' and 'ShBy' rows
 ShBy_df_2 <- final_summary_df3 %>%
-    filter(grepl("ShBy", Raster) & !grepl("_fao", Raster))
+    filter(grepl("Sh", Raster) & !grepl("_fao", Raster) & !grepl("ShBy", Raster))
 
 # Plot biomass by climate scenario and fertilization status, facet by study area
 ggplot(ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert)) +
@@ -895,12 +1052,12 @@ ggplot(ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert)) +
 
 # Only keep the Shrub layers
 Sh_ShBy_df_2 <- final_summary_df3 %>%
-    filter(grepl("Sh", Raster) & !grepl("_fao", Raster))
+    filter(grepl("Sh", Raster) & !grepl("_fao", Raster) & !grepl("ShBy", Raster))
 
 names(Sh_ShBy_df_2)[names(Sh_ShBy_df_2) == "Raster"] <- "Mask"
 
 # Plot biomass by climate scenario, fertilization status, and mask, facet by study area
-ggplot(Sh_ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert, color = Mask)) +
+ggplot(Sh_ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert)) +
     geom_bar(stat = "identity", position = "dodge") +
     facet_wrap(~Study_Area, scales = "free") +
     labs(title = "Total Biomass Comparison by Climate Scenario, Fertilization, and Mask",
@@ -909,50 +1066,9 @@ ggplot(Sh_ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert, color = M
     theme_bw()
 
 
-# Plot biomass by climate scenario, fertilization status, and mask, facet by study area
-ggplot(Sh_ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert, color = Mask)) +
-    geom_bar(stat = "identity", position = "dodge", size = 1.5) +  # Adjust pattern and size as needed
-    facet_wrap(~Study_Area, scales = "free") +
-    labs(title = "Total Biomass Comparison by Climate Scenario, Fertilization, and Mask",
-         x = "Climate Scenario", y = "Total Biomass (Tons)") +
-    scale_fill_manual(values = c("N" = "cadetblue", "Y" = "lightgreen")) +  # Set your own colors for Fert
-    theme_bw()
-
-
-# Create the plot with cross-hatched patterns for the "Mask" variable and change the color of the "Mask" outlines
-ggplot(Sh_ShBy_df_2, aes(x = Scenario, y = total_biomass, fill = Fert, color = Mask)) +
-    geom_bar(stat = "identity", position = position_dodge(preserve = "single"), size = 1) +
-    facet_wrap(~Study_Area, scales = "free") +
-    labs(title = "Total Biomass Comparison by Climate Scenario, Fertilization, and Mask",
-         x = "Climate Scenario", y = "Total Biomass (Tons)") +
-    scale_fill_manual(values = c("N" = "cadetblue", "Y" = "lightgreen")) +
-    scale_color_manual(values = c("ShBy" = "mediumpurple", "Sh" = "orange2")) +  # Change the color of the "Mask" outlines
-    theme_bw() +
-    theme(legend.position="top") +
-    theme(legend.key.size = unit(0.5, "cm")) +
-    guides(fill=guide_legend(override.aes=list(colour=c("black", "black"))))
-
-
-# Create a new variable for adjusted positioning
-Sh_ShBy_df_3 <- Sh_ShBy_df_2 %>%
-    group_by(Study_Area, Scenario) %>%
-    mutate(position_adjust = ifelse(Mask == "Sh", 0.5, 0))
-
-# Create the plot with adjusted positions for "Mask"
-ggplot(Sh_ShBy_df_3, aes(x = Scenario, y = total_biomass, fill = Fert, color = Mask)) +
-    geom_bar(stat = "identity", position = position_dodge(preserve = "single"), size = 1) +
-    facet_wrap(~Study_Area, scales = "free") +
-    labs(title = "Total Biomass Comparison by Climate Scenario, Fertilization, and Mask",
-         x = "Climate Scenario", y = "Total Biomass (Tons)") +
-    scale_fill_manual(values = c("N" = "cadetblue", "Y" = "lightgreen")) +
-    scale_color_manual(values = c("ShBy" = "mediumpurple", "Sh" = "orange2")) +
-    theme_bw() +
-    theme(legend.position = "top") +
-    theme(legend.key.size = unit(0.5, "cm")) +
-    guides(fill = guide_legend(override.aes = list(colour = c("black", "black"))))
 
 # Sum total biomass for each combination of Scenario, Fert, and Study_Area
-summarized_df <- ShBy_df_2 %>%
+summarized_df <- Sh_ShBy_df_2 %>%
     group_by(Scenario, Fert, Study_Area) %>%
     summarize(total_biomass = sum(total_biomass))
 
@@ -972,173 +1088,17 @@ ggplot(final_summarized_df, aes(x = Scenario, y = total_biomass, fill = Fert)) +
 
 
 
-Sh_ShBy_df_2_total <- Sh_ShBy_df_2 %>%
-    dplyr::select(Study_Area, Mask, Scenario, Managed, Fert, total_biomass)
+############################
 
-Sh_ShBy_df_2_sums <- Sh_ShBy_df_2_total %>%
-    group_by(Mask, Scenario, Managed, Fert, .drop = TRUE) %>%
-    summarize(total_biomass = sum(total_biomass), .groups = 'drop_last')
+# Calculate the difference between 'Fert' = Y and 'Fert' = N for each study area and scenario
+df_diff <- Sh_df_all %>%
+    group_by(Study_Area, Scenario) %>%
+    summarise(Difference = mean(Mean[Fert == 'Y']) - mean(Mean[Fert == 'N']))
 
-# Print the updated data frame
-print(Sh_ShBy_df_2_total)
-
-Sh_ShBy_df_2_sums_sh <- Sh_ShBy_df_2_sums %>%
-    dplyr::filter(Mask == "Sh", Managed == "M")
-
-# Define the reference value
-reference_value <- subset(Sh_ShBy_df_2_sums_sh, Scenario == "s2" & Managed == "M" & Fert == "N")$total_biomass
-
-# Create a new variable indicating whether total biomass is higher, lower, or equal to the reference
-Sh_ShBy_df_2_sums_sh <- Sh_ShBy_df_2_sums_sh %>%
-    mutate(Comparison = case_when(
-        total_biomass > reference_value ~ "Higher",
-        total_biomass < reference_value ~ "Lower",
-        TRUE ~ "Equal"
-    ))
-
-#######################################################################################
-# Load the required libraries
-library(plotly)
-
-# Filter the dataframe by 'Managed' = M
-filtered_df <- Sh_ShBy_df_2_sums_sh[Sh_ShBy_df_2_sums_sh$Managed == "M", ]
-
-# Create the 3D plot
-plot <- plot_ly(filtered_df, x = ~Scenario, y = ~Fert, z = ~total_biomass, color = ~Comparison, colors = c("red", "grey", "green"), type = "scatter3d", mode = "markers")
-
-# Add labels and title
-plot <- plot %>% layout(scene = list(xaxis = list(title = "Scenario"), yaxis = list(title = "Fert"), zaxis = list(title = "Total Biomass")))
-
-# Show the plot
-plot
-##################################################################################
-
-# Convert Comparison to a factor to maintain the order in the plot
-Sh_ShBy_df_2_sums_sh$Comparison <- factor(Sh_ShBy_df_2_sums_sh$Comparison, levels = c("Lower", "Equal", "Higher"))
-
-# Create the 3D plot
-plot_ly(Sh_ShBy_df_2_sums_sh, x = ~Scenario, y = ~Fert, z = ~total_biomass, color = ~Comparison,
-        colors = c("red", "grey", "green"), type = "scatter3d", mode = "markers") %>%
-    layout(scene = list(xaxis = list(title = "Scenario"),
-                        yaxis = list(title = "Fert"),
-                        zaxis = list(title = "Total Biomass")),
-           title = "3D Plot of Total Biomass by Scenario and Fert",
-           showlegend = TRUE)
-
-
-###############################################################################
-install.packages("orca")
-
-library(plotly)
-library(orca)
-
-# Convert Comparison to a factor to maintain the order in the plot
-Sh_ShBy_df_2_sums_sh$Comparison <- factor(Sh_ShBy_df_2_sums_sh$Comparison, levels = c("Lower", "Equal", "Higher"))
-
-# Create the 3D plot with adjusted color scale
-plot_ly(Sh_ShBy_df_2_sums_sh, x = ~Scenario, y = ~Fert, z = ~total_biomass, color = ~Comparison,
-        colorscale = list(c(0, 1), c("red", "grey", "green")), type = "scatter3d", mode = "markers") %>%
-    layout(scene = list(xaxis = list(title = "Scenario"),
-                        yaxis = list(title = "Fert"),
-                        zaxis = list(title = "Total Biomass")),
-           title = "3D Plot of Total Biomass by Scenario and Fert",
-           showlegend = TRUE)
-
-# Export the plot to PNG
-#orca("3d_plot.png", width = 800, height = 600)
-
-
-
-
-
-library(rayshader)
-library(ggplot2)
-d <- read.table(text=' x   y     z
-t1   5   high
-t1   2   low
-t1   4   med
-t2   8   high
-t2   1   low
-t2   3   med
-t3  50   high
-t3  12   med
-t3  35   low', header=TRUE)
-
-p <- ggplot(d, aes(x, z, fill = y)) +
-    geom_tile() +
-    scale_fill_fermenter(type = "div", palette = "RdYlBu")
-
-
-
-d <- read.table(text=' x   y     z
-t1   5   high
-t1   2   low
-t1   4   med
-t2   8   high
-t2   1   low
-t2   3   med
-t3  50   high
-t3  12   med
-t3  35   low', header=TRUE)
-
-library(latticeExtra)
-
-cloud(y~x+z, d, panel.3d.cloud=panel.3dbars, col.facet='grey',
-      xbase=0.4, ybase=0.4, scales=list(arrows=FALSE, col=1),
-      par.settings = list(axis.line = list(col = "transparent")))
-
-
-
-Sh_ShBy_df_2_sums_sh
-
-
-test <- as.data.frame(Sh_ShBy_df_2_sums_sh)
-
-test$Scenario <- as.factor(test$Scenario)
-test$Fert <- as.factor(test$Fert)
-
-cloud(total_biomass~Scenario+Fert, test, panel.3d.cloud=panel.3dbars, col.facet='grey',
-      xbase=0.4, ybase=0.4, scales=list(arrows=FALSE, col=1),
-      par.settings = list(axis.line = list(col = "transparent")))
-
-
-# Define a color gradient from light green to dark green
-color_gradient <- colorRampPalette(c("lightgreen", "darkgreen"))
-
-# Create a custom color vector based on total_biomass values
-color_vector <- color_gradient(nrow(test))
-
-# Plot using cloud and panel.3dbars
-cloud(
-    total_biomass ~ Scenario + Fert,
-    data = test,
-    panel.3d.cloud = panel.3dbars,
-    col.facet=color_vector,
-    xbase = 0.4,
-    ybase = 0.4,
-    scales = list(arrows = FALSE, col = 1),
-    par.settings = list(axis.line = list(col = "transparent")),
-    col = color_vector
-)
-
-
-
-
-Sh_ShBy_df_2_means <- Sh_ShBy_df_2 %>%
-    dplyr::select(Study_Area, Mask, Scenario, Managed, Fert, Mean) %>%
-    filter(Mask == 'Sh')
-
-scenario_managed_fert_means <- Sh_ShBy_df_2_means %>%
-    group_by(Scenario, Managed, Fert) %>%
-    summarize(mean_of_mean = mean(Mean))
-
-
-test2 <- scenario_managed_fert_means %>%
-    filter(Managed == 'M')
-test2$Scenario <- as.factor(test2$Scenario)
-test2$Fert <- as.factor(test2$Fert)
-
-cloud(mean_of_mean~Scenario+Fert, test2, panel.3d.cloud=panel.3dbars, col.facet='grey',
-      xbase=0.4, ybase=0.4, scales=list(arrows=FALSE, col=1),
-      par.settings = list(axis.line = list(col = "transparent")))
-
+# Plot the differences by study area
+ggplot(df_diff, aes(x = Study_Area, y = Difference, fill = Scenario)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = "Mean Difference between Fert Y and Fert N by Study Area",
+         x = "Study Area", y = "Mean Difference") +
+    theme_bw() +
+    theme(aspect.ratio= 1)

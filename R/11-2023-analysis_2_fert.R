@@ -12,7 +12,7 @@ library(gridExtra)  # For grid.arrange
 ##################################################################################
 # Define study areas
 study_areas <- c("M_9S", "M_11S", "M_18S", "U_18S", "U_15S", "U_13N") # , "U_13N"
-#study_areas <- c("U_13N")
+#study_areas <- c("U_18S")
 
 # Loop through study areas
 for (area in study_areas) {

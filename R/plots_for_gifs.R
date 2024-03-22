@@ -280,7 +280,7 @@ r11.1 <- terra::mask(r11, mask)
 r12s <- rast("D:/3PG_Cplusplus/output_M_18S_bs_old/ws202007.flt")
 r12f <- rast("D:/3PG_Cplusplus/output_M_18S_bs_old/wf202007.flt")
 r12 <- r12s+r12f
-r12[r10 < 10] <- NA
+r12[r12 < 10] <- NA
 crs(r12) <- crs(mask)
 compareGeom(r12,mask)
 r12.1 <- terra::mask(r12, mask)
@@ -379,7 +379,7 @@ dev.off()
 png("G:/Sync/PostDoc/Figures/18S_bs/r12.png", width = 8.2, height = 8, units = "in", res = 300)
 plot(raster_base, col = gray.colors(256), legend = FALSE, alpha = 0.8)
 plot(r12.1, add = TRUE, alpha = 0.9, col = viridis(num_classes), breaks = breaks, legend = FALSE)
-text(x = (xmin(r11)+15000), y = (ymin(r11)+8000), labels = "2019", col = "red", cex = 1.5)
+text(x = (xmin(r12.1)+15000), y = (ymin(r12.1)+8000), labels = "2019", col = "red", cex = 1.5)
 dev.off()
 
 
