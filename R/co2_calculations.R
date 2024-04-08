@@ -55,9 +55,15 @@ fFrost = 0.966666666666667
 PhysMod = 0.762330679534458
 
 ####################################################################################
+# deciduous - AMICHEV
+alphaCx = 0.0177 #canopy quantum efficiency (PARAMETER) 0.04 for lodgepole, 0.03 Black spruce, 0.035 deciduous
+fNutr = 1
+fT = 0.745284474
+fFrost = 0.966666667
+#fCalpha = fCalpha_values[1]
+PhysMod = 0.762330779
 
-
-
+####################################################################################
 
 # alphaC = alphaCx * fNutr * fT * fFrost * fCalpha * PhysMod
 # alphaC goes directly into NPP calculation
@@ -133,7 +139,7 @@ co2_levels <- c(350, 500, 700)  # Include all relevant CO2 levels
 times <- c(1, 2, 3)  # Example time points in years
 fCalpha <- 1  # Constant for fCalpha
 fNutr <- 1
-fT <- 0.973126890491265
+fT <- 0.745284474
 fFrost <- 0.966666667
 
 # Observed data for alphaC and PhysMod over time and for different CO2 levels
@@ -173,17 +179,34 @@ fFrost <- 0.966666667
 
 # Block of observed alphacx for deciduous
 
+# # Example with 0.05 alphaCx:
+# observed_alphaC <- matrix(c(
+#     0.025043415, 0.024671943,0.02016851, # CO2 = 350, time = 1, 2, 3
+#     0.030224811, 0.029776483, 0.0243413055724224, # CO2 = 500, time = 1, 2, 3
+#     0.035060781, 0.03454072, 0.028235914 # CO2 = 700, time = 1, 2, 3
+# ), nrow = length(co2_levels), byrow = TRUE)
+#
+# observed_PhysMod <- matrix(c(
+#     0.762330784, 0.751023038, 0.613936894,  # CO2 = 350, time = 1, 2, 3
+#     0.762330784, 0.751023038, 0.613936894,  # CO2 = 500, time = 1, 2, ...
+#     0.762330784, 0.751023038, 0.613936894 # CO2 = 700, time = 1, 2, ...
+# ), nrow = length(co2_levels), byrow = TRUE)
+
+
+
+# Block of observed alphacx for deciduous - amichev
+
 # Example with 0.05 alphaCx:
 observed_alphaC <- matrix(c(
-    0.025043415, 0.024671943,0.02016851, # CO2 = 350, time = 1, 2, 3
-    0.030224811, 0.029776483, 0.0243413055724224, # CO2 = 500, time = 1, 2, 3
-    0.035060781, 0.03454072, 0.028235914 # CO2 = 700, time = 1, 2, 3
+    0.009721103, 0.006244398 ,0.004371687, # CO2 = 350, time = 1, 2, 3
+    0.011732366, 0.010901423, 0.005276174, # CO2 = 500, time = 1, 2, 3
+    0.013609544, 0.012645651, 0.006120362 # CO2 = 700, time = 1, 2, 3
 ), nrow = length(co2_levels), byrow = TRUE)
 
 observed_PhysMod <- matrix(c(
-    0.762330784, 0.751023038, 0.613936894,  # CO2 = 350, time = 1, 2, 3
-    0.762330784, 0.751023038, 0.613936894,  # CO2 = 500, time = 1, 2, ...
-    0.762330784, 0.751023038, 0.613936894 # CO2 = 700, time = 1, 2, ...
+    0.762330779, 0.489686945, 0.342828537,  # CO2 = 350, time = 1, 2, 3
+    0.762330779, 0.708338844, 0.342828537,  # CO2 = 500, time = 1, 2, ...
+    0.762330779, 0.708338844, 0.342828537 # CO2 = 700, time = 1, 2, ...
 ), nrow = length(co2_levels), byrow = TRUE)
 
 

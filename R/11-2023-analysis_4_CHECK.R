@@ -232,7 +232,7 @@ df <- read.csv("G:/Sync/PostDoc/Figures/Paper_1_CO2e_stats.csv")
 # Convert Fert to a factor with appropriate levels
 df$Fert <- factor(df$Fert, levels = c("no", "yes"))
 
-# Create the plot
+# Create the plot =- NOT WORK
 ggplot(df, aes(x = Area, y = TgCO2e_ha, fill = Scenario, shape = Fert)) +
     geom_point(size = 4) +
     scale_fill_manual(values = c("s1" = "red", "s2" = "blue", "s3" = "green", "Drever" = "orange")) +
@@ -243,26 +243,11 @@ ggplot(df, aes(x = Area, y = TgCO2e_ha, fill = Scenario, shape = Fert)) +
 
 
 
-# Libraries
-library(ggplot2)
-
 # Define colors and shapes for scenarios and fertilization
 scenario_colors <- c("s1" = "blue", "s2" = "green", "s3" = "red")
 fert_shapes <- c("no" = "+", "yes" = "o")
 
-# Plot
-# Plot
-ggplot(df, aes(x = Scenario, y = TgCO2e_ha, color = Scenario, shape = Fert)) +
-    geom_point(aes(size = 3)) +  # Adjust point size
-    geom_point(data = df[df$Scenario == "all", ], aes(x = Scenario, y = TgCO2e_ha),
-               color = "black", shape = 21, size = 4) +  # Plot 'all' as black square
-    geom_point(data = df[df$Scenario == "Drever", ], aes(x = Scenario, y = TgCO2e_ha),
-               color = "grey", shape = 22, size = 4) +  # Plot 'Drever' as grey diamond
-    labs(title = "Tg CO2 Emissions per Hectare",
-         x = "Scenario", y = "Emissions", color = "Scenario", shape = "Fertilization") +
-    theme_classic() +
-    scale_color_manual(values = scenario_colors) +
-    scale_shape_manual(values = fert_shapes)
+# Plot - yuck
 
 
 
@@ -282,9 +267,7 @@ summary_df <- df %>%
               Min = min(TgCO2e_ha),
               Mean = mean(TgCO2e_ha))
 
-
-library(ggplot2)
-
+# Almost
 ggplot(summary_df, aes(x = Area, ymin = Min, lower = Mean, middle = Mean, upper = Mean, ymax = Max)) +
     geom_errorbar(width = 0.1, color = "black", size = 0.8) +  # Represent the range with error bars
     geom_point(aes(y = Mean), color = "red", size = 3) +  # Overlay mean values with points
@@ -327,7 +310,7 @@ ggplot(summary_filtered, aes(x = Area, ymin = Min, lower = Mean, middle = Mean, 
 
 
 
-
+# best example
 ggplot(summary_filtered, aes(x = Area, y = Mean)) +
     geom_point(aes(y = Max), color = "black", size = 2, shape = 1) +  # Represent max as black points
     geom_point(aes(y = Min), color = "black", size = 2, shape = 1) +  # Represent min as black points
