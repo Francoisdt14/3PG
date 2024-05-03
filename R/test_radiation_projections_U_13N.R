@@ -342,7 +342,10 @@ library(stringr)
 #directory <- "Y:/Francois/flt_test_100_noNA"
 #directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
 directory <- "D:/BP_Layers/U_13N/biomass_3PG/fert/S3/Y4_Output"
-directory <- "D:/BP_Layers/NPP_Fert/U_13N/s2/"
+directory <- "I:/data_2024_05_02_deciduous/U_13N/S2_dec/Y4_output_test"
+directory <- "D:/BP_Layers/U_13N/biomass_3PG/S2/Y4_output_test"
+
+
 
 
 # Get the list of .hdr files in the directory

@@ -29,9 +29,10 @@ for (area in study_areas) {
     # Get the EPSG code from fao.mask
     epsg_code <- crs(fao_mask, describe = T)$code
     # Set the CRS of s1 using the extracted EPSG code
-    crs(s1) <- paste0("EPSG:", epsg_code)
+    #crs(s1) <- paste0("EPSG:", epsg_code)
+    crs(s1) <- crs(Sh_mask)
 
-    masked_rast <- terra::mask(s1, fao_mask)
+    masked_rast <- terra::mask(s1, Sh_mask)
 
     # Create the file path and name for the output raster
     output_path <- file.path(output_dir, paste(area, "fao_2020", sep = "_"))

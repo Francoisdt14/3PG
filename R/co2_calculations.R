@@ -46,13 +46,13 @@ PhysMod = 0.762330785
 
 ####################################################################################
 
-# deciduous
-alphaCx = 0.035 #canopy quantum efficiency (PARAMETER) 0.04 for lodgepole, 0.03 Black spruce, 0.035 deciduous
+# DECID2
+alphaCx = 0.030 #canopy quantum efficiency (PARAMETER) 0.04 for lodgepole, 0.03 Black spruce, 0.035 deciduous
 fNutr = 1
-fT = 0.973126890491265
-fFrost = 0.966666666666667
+fT = 0.97096886
+fFrost = 0.966666667
 #fCalpha = fCalpha_values[1]
-PhysMod = 0.762330679534458
+PhysMod = 0.762330783963113
 
 ####################################################################################
 # deciduous - AMICHEV
@@ -235,6 +235,6 @@ for (i in 1:length(co2_levels)) {
 }
 
 # Print the dataframe
-print(result_df2)
+print(s2)
 
 # Does this show it doesn't matter whether it changes with time?
