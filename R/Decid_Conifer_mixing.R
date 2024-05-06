@@ -194,6 +194,13 @@ test$select <- ifelse(test$`TWI_U_13N` > 0.8, test$ws,
                           ifelse(test$`TWI_U_13N` < 0.2, test$`ws207007`,
                                  test$random))
 
+
+# FISX THIS
+# Create the new column
+test$wet <- if(test$`TWI_U_13N` > 0.8, test$ws,
+                   else(test$`ws207007`))
+
+
 head(test)
 
 raster.rand <- raster1
