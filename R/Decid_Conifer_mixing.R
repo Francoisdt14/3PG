@@ -187,27 +187,118 @@ test = r_values %>% as.data.frame()
 
 test$random = apply(test[, 1:2], MARGIN = 1, FUN = function(rw){sample(rw, 1)})
 
+
+names(test) <- c("conif", "decid", "wetness", "random")
 head(test)
 
 # Create the new column
-test$select <- ifelse(test$`TWI_U_13N` > 0.8, test$ws,
-                          ifelse(test$`TWI_U_13N` < 0.2, test$`ws207007`,
+test$scenario1 <- ifelse(test$wetness > 0.7, test$decid,
+                          ifelse(test$wetness < 0.3, test$conif,
                                  test$random))
-
-
-# FISX THIS
-# Create the new column
-test$wet <- if(test$`TWI_U_13N` > 0.8, test$ws,
-                   else(test$`ws207007`))
-
+# Create the new columns
+test$scenario2 <- ifelse(test$wetness > 0.8, test$decid, test$conif)
+test$scenario3 <- ifelse(test$wetness > 0.5, test$decid, test$conif)
 
 head(test)
 
-raster.rand <- raster1
+raster.scen1 <- raster1
+raster.scen1[!is.na(raster.scen1)] <- test$scenario1
 
-raster.rand[!is.na(raster.rand)] <- test$select
+global(raster.scen1, fun="mean",na.rm=TRUE)
+mean(test$scenario1)
+
+biomass.df <- test %>% select(!c(wetness, random))
+biomass.df$clim_scen <- 'S2'
+biomass.df$study_area <- 'U_13N'
+
+#############################
+library(reshape2)
+
+library(reshape2)
+
+# Reshape data (explicitly specify scenario columns)
+biomass.molten <- melt(biomass.df, id.vars = c("clim_scen", "study_area"),
+                       measure.vars = c("conif", "decid", "scenario1", "scenario2", "scenario3"))
+
+# Group by variable (actual column name after melt)
+biomass.summary <- biomass.molten %>%
+    group_by(variable) %>%  # Group by "variable" which holds scenario information
+    summarize(mean_biomass = mean(value))
+
+
+library(stats)
+library(FSA)
+
+# Kruskal-Wallis test
+kruskal_results <- kruskal.test(value ~ variable, data = biomass.molten)
+
+# Dunn's test with Bonferroni correction for pairwise comparisons
+dunn_results <- dunnTest(value ~ variable, data = biomass.molten, method = "bonferroni")
 
 
 
 
+# Print Kruskal-Wallis test results
+print(kruskal_results)
 
+# Print Dunn's test results
+print(dunn_results)
+
+# Extract pairwise comparison results from Dunn's test
+pairwise_results <- dunn_results$res
+
+# Plot pairwise comparisons
+ggplot(pairwise_results, aes(x = Comparison, y = P.adj)) +
+    geom_bar(stat = "identity", fill = "skyblue", width = 0.5) +
+    coord_flip() +
+    labs(title = "Pairwise Comparisons",
+         x = "Comparison",
+         y = "Adjusted p-value") +
+    theme_minimal()
+
+
+
+library(ggplot2)
+library(rcompanion)
+
+# Perform Dunn's test
+dunn_test <- dunnTest(biomass.molten$value, biomass.molten$variable, p.adjust.method = "bonferroni")
+
+# Create a data frame for plotting
+plot_data <- data.frame(
+    comparison = dunn_test$comparison,
+    z = dunn_test$Z,
+    p.value = dunn_test$P
+)
+
+# Create the plot
+ggplot(plot_data, aes(x = comparison, y = z)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    geom_text(aes(label = sprintf("p = %.3f", p.value)), vjust = -0.5, size = 3) +
+    coord_flip() +
+    labs(
+        title = "Dunn's Test for Pairwise Comparisons",
+        x = "Comparison",
+        y = "Z-score"
+    ) +
+    theme_minimal() +
+    theme(axis.text.y = element_text(size = 8))
+
+#####
+library(emmeans)
+
+# Calculate estimated marginal means
+em_means <- emmeans(biomass.molten, ~ variable)
+
+# Extract pairwise comparisons
+pairwise_comparisons <- pairs(em_means)
+
+# Plot means with error bars and significance letters
+ggplot(biomass.molten, aes(x = variable, y = value)) +
+    geom_bar(stat = "summary", fun = "mean", fill = "skyblue") +
+    geom_errorbar(stat = "summary", fun.data = mean_cl_normal, width = 0.2) +
+    geom_text(data = pairwise_comparisons, aes(x = x, y = y, label = as.character(p.adj)), vjust = -1, size = 4) +
+    labs(title = "Mean Biomass by Planting Scenario",
+         x = "Planting Scenario",
+         y = "Mean Biomass") +
+    theme_minimal()
