@@ -1,36 +1,8 @@
 # Load the required packages
-library(terra)
-
-# Load the raster data
-raster1 <- rast("path/to/raster1.tif")  # Biomass values for species A
-raster2 <- rast("path/to/raster2.tif")  # Biomass values for species B
-
-raster3 <- rast("path/to/raster3.tif")  # Wetness index
-
-# Create a new raster to store the combined values
-new_raster <- rast(raster1)
-
-# Iterate through the pixels and assign values based on the wetness index
-for (i in 1:ncell(new_raster)) {
-    if (raster3[i] > 0.5) {
-        new_raster[i] <- raster1[i]
-    } else {
-        new_raster[i] <- raster2[i]
-    }
-}
-
-# Save the new raster
-writeRaster(new_raster, "path/to/new_raster.tif", overwrite = TRUE)
-
-
-######################################################################################################
-# TEST
-#######################################################################################################
-# PREPROCESS
-
-#######################################################################################
 # TESTING
+
 #######################################################################################
+
 library(tidyverse)
 library(terra)
 
@@ -63,6 +35,8 @@ con1_mask <- terra::mask(con1, Sh_mask)
 hist(con1_mask)
 hist(dec1_mask)
 
+#writeRaster(con1_mask, "D:/BP_Layers/U_13N/analysis/paper_2/con1.tif")
+#writeRaster(dec1_mask, "D:/BP_Layers/U_13N/analysis/paper_2/dec1.tif")
 
 # Load the raster data
 raster1 <- con1_mask  # Biomass values for SPRUCE
@@ -77,98 +51,6 @@ raster3.sc <- (raster3.mask - minmax(raster3.mask)[1]) / (minmax(raster3.mask)[2
 
 # Create a new raster to store the combined values
 new_raster <- raster1
-
-# Define the wetness thresholds
-wet_threshold <- 0.67
-medium_threshold <- 0.33
-
-#### this doesn't work ...
-
-# Scenario 1: Species A in wet, Species B in rest
-for (i in 1:ncell(new_raster)) {
-    if (raster3.sc[i] > wet_threshold) {
-        new_raster[i] <- raster1[i]
-    } else {
-        new_raster[i] <- raster2[i]
-    }
-}
-
-plot(new_raster)
-
-
-tic()
-# Create a new raster using conditional assignment with ifel()
-new_raster <- ifel(raster3.sc <= wet_threshold, raster1,
-                   raster2)
-toc()
-
-
-
-# Scenario 2: Species A in wet and medium, Species B in rest
-for (i in 1:ncell(new_raster)) {
-    if (raster3[i] > medium_threshold) {
-        new_raster[i] <- raster1[i]
-    } else {
-        new_raster[i] <- raster2[i]
-    }
-}
-
-tic()
-# Create a new raster using conditional assignment with ifel()
-new_raster <- ifel(raster3.sc <= medium_threshold, raster1,
-                   raster2)
-toc()
-
-
-###############################################################################
-
-# Define the wetness thresholds
-wet_threshold <- 0.67
-medium_threshold <- 0.33
-
-# Scenario 3: Species A in wet, Species B in dry, medium randomly assigned
-for (i in 1:ncell(new_raster)) {
-    if (raster3[i] > wet_threshold) {
-        new_raster[i] <- raster1[i]
-    } else if (raster3[i] < (1 - wet_threshold)) {
-        new_raster[i] <- raster2[i]
-    } else {
-        new_raster[i] <- sample(c(raster1[i], raster2[i]), 1)
-    }
-}
-
-
-new_raster3 <- raster1
-
-# Assign values based on conditions (avoiding ifelse)
-new_raster3[] <- raster2[raster3.sc > wet_threshold]  # Wet gets decid
-new_raster3[] <- raster1[raster3.sc < medium_threshold]  # Dry gets spruce
-#new_raster3[] <- sample(c(raster1[], raster2[]), size=length(raster3.sc) - sum(!is.na(new_raster[])), replace=TRUE)  # Random in medium
-
-# Assuming you have raster1 and raster2 already loaded
-r1 <- raster1
-r2 <- raster2
-
-# Combine the two rasters into a single stack
-r_stack <- c(r1, r2)
-# Get the number of cells in the rasters
-n_cells <- ncell(r_stack)
-# Extract the values from the stack, skipping NAs
-r_values <- values(r_stack, na.rm = TRUE)
-# Randomly sample the non-NA cell indices
-sample_idx <- sample(1:length(r_values), length(r_values), replace = TRUE)
-# Create the random raster
-raster.rand <- rast(r1)
-raster.rand[!is.na(raster.rand)] <- r_values[sample_idx]
-
-# Fill the values between the thresholds with the random raster
-new_raster3[] <- raster.rand[raster3.sc >= medium_threshold & raster3.sc <= wet_threshold]
-
-
-
-
-
-
 
 ###########################################################################
 # Assuming you have raster1 and raster2 already loaded
@@ -192,39 +74,78 @@ names(test) <- c("conif", "decid", "wetness", "random")
 head(test)
 
 # Create the new column
-test$scenario1 <- ifelse(test$wetness > 0.7, test$decid,
-                          ifelse(test$wetness < 0.3, test$conif,
+test$scen3 <- ifelse(test$wetness > 0.67, test$decid,
+                          ifelse(test$wetness < 0.33, test$conif,
                                  test$random))
 # Create the new columns
-test$scenario2 <- ifelse(test$wetness > 0.8, test$decid, test$conif)
-test$scenario3 <- ifelse(test$wetness > 0.5, test$decid, test$conif)
+test$scen2 <- ifelse(test$wetness > 0.67, test$decid, test$conif)
+#test$scenario3 <- ifelse(test$wetness > 0.5, test$decid, test$conif)
 
 head(test)
 
 raster.scen1 <- raster1
-raster.scen1[!is.na(raster.scen1)] <- test$scenario1
+raster.scen1[!is.na(raster.scen1)] <- test$scen3
+
+#writeRaster(raster.scen1, "D:/BP_Layers/U_13N/analysis/paper_2/scen3.tif")
 
 global(raster.scen1, fun="mean",na.rm=TRUE)
 mean(test$scenario1)
 
-biomass.df <- test %>% select(!c(wetness, random))
+biomass.df <- test %>% dplyr::select(!c(wetness, random))
 biomass.df$clim_scen <- 'S2'
 biomass.df$study_area <- 'U_13N'
 
 #############################
 library(reshape2)
 
-library(reshape2)
 
 # Reshape data (explicitly specify scenario columns)
 biomass.molten <- melt(biomass.df, id.vars = c("clim_scen", "study_area"),
-                       measure.vars = c("conif", "decid", "scenario1", "scenario2", "scenario3"))
+                       measure.vars = c("conif", "decid", "scen3", "scen2"))
 
 # Group by variable (actual column name after melt)
 biomass.summary <- biomass.molten %>%
     group_by(variable) %>%  # Group by "variable" which holds scenario information
     summarize(mean_biomass = mean(value))
 
+
+##################
+# Define labels for the columns
+col_labels <- c("coniferous", "deciduous", "scenario 3", "scenario 2")
+
+# Select the first 4 columns for plotting
+biomass_df_subset <- biomass.df[, 1:4]  # Select columns 1 to 4 (inclusive)
+
+# Melt the dataframe to long format for easier plotting
+biomass_df_melted <- reshape2::melt(biomass_df_subset)
+
+# Plot violin plots for each variable
+ggplot(biomass_df_melted, aes(x = variable, y = value)) +
+    geom_violin(fill = "skyblue", color = "black") +
+    #geom_boxplot(width = 0.1, fill = "white", color = "black", outlier.shape = NA) + # Add boxplots for visualizing quartiles and outliers
+    theme_minimal() +
+    labs(title = "Distribution of Biomass Variables",
+         x = "Variable",
+         y = "Biomass Value")
+
+## or
+
+# Reshape the dataframe using gather()
+biomass_df_long <- biomass_df_subset %>%
+    gather(key = "variable", value = "value")
+
+# Create the plot
+ggplot(biomass_df_long, aes(x = variable, y = value)) +
+    geom_violin() +
+    geom_boxplot(width = 0.1, fill = "white") +
+    labs(x = "Variable", y = "Value") +
+    theme_minimal()
+
+###################
+
+
+
+##########
 
 library(stats)
 library(FSA)
@@ -236,8 +157,6 @@ kruskal_results <- kruskal.test(value ~ variable, data = biomass.molten)
 dunn_results <- dunnTest(value ~ variable, data = biomass.molten, method = "bonferroni")
 
 
-
-
 # Print Kruskal-Wallis test results
 print(kruskal_results)
 
@@ -246,6 +165,26 @@ print(dunn_results)
 
 # Extract pairwise comparison results from Dunn's test
 pairwise_results <- dunn_results$res
+
+# Create a grouped bar plot
+ggplot(pairwise_results, aes(x = Comparison, y = Z, fill = P.adj < 0.05)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(aes(label = ifelse(P.adj < 0.05, "Significant", "")),
+              vjust = -0.5, position = position_dodge(width = 0.9)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Pairwise Dunn Test Comparisons",
+         x = "Comparison",
+         y = "Z Value") +
+    scale_fill_manual(values = c("TRUE" = "red", "FALSE" = "grey"),
+                      guide = FALSE)
+
+
+
+
+
+
+
 
 # Plot pairwise comparisons
 ggplot(pairwise_results, aes(x = Comparison, y = P.adj)) +
@@ -262,19 +201,20 @@ library(ggplot2)
 library(rcompanion)
 
 # Perform Dunn's test
-dunn_test <- dunnTest(biomass.molten$value, biomass.molten$variable, p.adjust.method = "bonferroni")
+dunn_test <- dunnTest(biomass.molten$value, biomass.molten$variable, method = "bonferroni")
+
 
 # Create a data frame for plotting
 plot_data <- data.frame(
-    comparison = dunn_test$comparison,
-    z = dunn_test$Z,
-    p.value = dunn_test$P
+    comparison = dunn_test$res[1],
+    z = dunn_test$res[2],
+    p.value = dunn_test$res[4]
 )
 
 # Create the plot
-ggplot(plot_data, aes(x = comparison, y = z)) +
+ggplot(plot_data, aes(x = Comparison, y = Z)) +
     geom_bar(stat = "identity", fill = "steelblue") +
-    geom_text(aes(label = sprintf("p = %.3f", p.value)), vjust = -0.5, size = 3) +
+    geom_text(aes(label = sprintf("p = %.3f", P.adj)), vjust = -0.5, size = 3) +
     coord_flip() +
     labs(
         title = "Dunn's Test for Pairwise Comparisons",
@@ -284,21 +224,95 @@ ggplot(plot_data, aes(x = comparison, y = z)) +
     theme_minimal() +
     theme(axis.text.y = element_text(size = 8))
 
+######
+
+
+dunn_pvals <- dunn_test$res[, "P.adj"]
+
+assign_letter <- function(pval.matrix) {
+    # Set a significance threshold (e.g., 0.05)
+    alpha <- 0.05
+
+    # Initialize an empty vector for letters
+    letters <- rep(NA, nrow(pval.matrix))
+
+    # Loop through rows (each comparison)
+    for (i in 1:nrow(pval.matrix)) {
+        # Find non-significant comparisons (p-value > alpha)
+        if (all(pval.matrix[i, ] > alpha)) {
+            # Assign same letter for non-significant comparisons
+            letters[i] <- letters[which.max(letters)]
+        } else {
+            # Assign a new letter for significant comparisons
+            letters[i] <- paste0("A", length(unique(letters)) + 1)
+        }
+    }
+    return(letters)
+}
+
+
+# Assuming 'variable' is the column for scenario names
+biomass.molten.2 <- biomass.molten %>%
+    left_join(data.frame(variable = unique(biomass.molten$variable), pval = dunn_pvals), by = "variable") %>%
+    mutate(letter_group = assign_letter(pval))
+
+
+
+######
+
+biomass.test <- kruskal.test(value ~ variable, data = biomass.molten)
+
+
 #####
-library(emmeans)
 
-# Calculate estimated marginal means
-em_means <- emmeans(biomass.molten, ~ variable)
+# Calculate means for each level of the variable factor
+mean_values <- biomass.molten %>%
+    group_by(variable) %>%
+    summarise(mean_value = mean(value))
 
-# Extract pairwise comparisons
-pairwise_comparisons <- pairs(em_means)
+# Perform pairwise comparisons using the Wilcoxon rank sum test
+pairwise_results <- pairwise.wilcox.test(biomass.molten$value, biomass.molten$variable, p.adjust.method = "bonferroni")
 
-# Plot means with error bars and significance letters
-ggplot(biomass.molten, aes(x = variable, y = value)) +
-    geom_bar(stat = "summary", fun = "mean", fill = "skyblue") +
-    geom_errorbar(stat = "summary", fun.data = mean_cl_normal, width = 0.2) +
-    geom_text(data = pairwise_comparisons, aes(x = x, y = y, label = as.character(p.adj)), vjust = -1, size = 4) +
+# Extract adjusted p-values from pairwise comparison results
+p_adj <- pairwise_results$P.adj
+
+significance <- ifelse(p_adj < 0.05, "*", "")
+
+# Create a data frame for plotting
+plot_data <- data.frame(variable = unique(biomass.molten$variable),
+                        mean_value = mean_values$mean_value,
+                        significance = significance)
+
+# Plot means with error bars and significance indicators
+ggplot(plot_data, aes(x = variable, y = mean_value)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    geom_errorbar(stat = "identity", aes(ymin = mean_value - sd(value), ymax = mean_value + sd(value)), width = 0.2) +
+    geom_text(aes(label = significance), vjust = -0.5, size = 6) +
     labs(title = "Mean Biomass by Planting Scenario",
          x = "Planting Scenario",
          y = "Mean Biomass") +
     theme_minimal()
+
+
+
+
+
+
+
+# Combine mean values with adjusted p-values
+pairwise_comparison_data <- cbind(mean_values, p_adj)
+
+# Plot means with error bars and significance letters
+ggplot(pairwise_comparison_data, aes(x = variable, y = mean_value)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    geom_errorbar(stat = "identity", aes(ymin = mean_value - sd(value), ymax = mean_value + sd(value)), width = 0.2) +
+    geom_text(aes(label = ifelse(p_adj < 0.05, "*", "")), vjust = -0.5, size = 6) +
+    labs(title = "Mean Biomass by Planting Scenario",
+         x = "Planting Scenario",
+         y = "Mean Biomass") +
+    theme_minimal()
+
+
+
+
+
