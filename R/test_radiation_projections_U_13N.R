@@ -343,7 +343,10 @@ library(stringr)
 #directory <- "D:/BP_Layers/M_18S/3PG_flt/6_90m_flt"
 directory <- "D:/BP_Layers/U_13N/biomass_3PG/fert/S3/Y4_Output"
 directory <- "I:/data_2024_05_02_deciduous/U_13N/S2_dec/Y4_output_test"
-directory <- "D:/BP_Layers/U_13N/biomass_3PG/S2/Y4_output_test"
+directory <- "D:/BP_Layers/U_13N/biomass_3PG/S3/Y4_output"
+
+
+directory <- "I:/data_2024_05_02_deciduous/U_13N/S3_dec/Y4_output"
 
 
 
