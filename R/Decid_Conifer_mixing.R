@@ -1,11 +1,48 @@
 # Load the required packages
-# TESTING
-
-#######################################################################################
 
 library(tidyverse)
 library(terra)
+library(arrow)
+library(FSA)
+library(tictoc)
+library(viridis)
+library(ggridges)
+library(dplyr)
+library(tidyr)
+library(gridExtra)
+library(FSA)
 
+####
+#Custom ggplot theme
+library(extrafont)
+font_import()
+loadfonts(quiet = T)
+theme_cwm <- function(){
+    theme_bw() %+replace%    #replace elements we want to change
+        theme(
+
+            #grid elements
+            #panel.grid = element_blank(),    #strip major gridlines
+            axis.ticks = element_line(color = "black"),          #strip axis ticks
+
+            #text elements
+            text = element_text(family = "Open Sans", color = "black"),
+            axis.text = element_text(family = "Open Sans", color = "black"),
+
+            # other
+            legend.position = "bottom",
+            strip.background = element_blank()
+
+        )
+}
+
+####
+
+
+
+# First, some TESTING
+
+#######################################################################################
 # Load the masks
 Sh_mask <- rast("D:/BP_Layers/U_13N/landcover/Sh_90m.tif")
 
@@ -81,270 +118,42 @@ test$scen3 <- ifelse(test$wetness > 0.67, test$decid,
 test$scen2 <- ifelse(test$wetness > 0.67, test$decid, test$conif)
 #test$scenario3 <- ifelse(test$wetness > 0.5, test$decid, test$conif)
 
-
-####################
-
-head(test)
-
-raster.scen1 <- raster1
-raster.scen1[!is.na(raster.scen1)] <- test$scen3
-
-#writeRaster(raster.scen1, "D:/BP_Layers/U_13N/analysis/paper_2/scen3.tif")
-
-global(raster.scen1, fun="mean",na.rm=TRUE)
-mean(test$scenario1)
-
-biomass.df <- test %>% dplyr::select(!c(wetness, random))
-biomass.df$clim_scen <- 'S2'
-biomass.df$study_area <- 'U_13N'
-
-#############################
-library(reshape2)
-
-
-# Reshape data (explicitly specify scenario columns)
-biomass.molten <- melt(biomass.df, id.vars = c("clim_scen", "study_area"),
-                       measure.vars = c("conif", "decid", "scen3", "scen2"))
-
-# Group by variable (actual column name after melt)
-biomass.summary <- biomass.molten %>%
-    group_by(variable) %>%  # Group by "variable" which holds scenario information
-    summarize(mean_biomass = mean(value))
-
-
-##################
-# Define labels for the columns
-col_labels <- c("coniferous", "deciduous", "scenario 3")
-
-# Select the first 4 columns for plotting
-biomass_df_subset <- biomass.df[, 1:3]  # Select columns 1 to 4 (inclusive)
-
-# Melt the dataframe to long format for easier plotting
-biomass_df_melted <- reshape2::melt(biomass_df_subset)
-
-# Plot violin plots for each variable
-ggplot(biomass_df_melted, aes(x = variable, y = value)) +
-    geom_violin(fill = "skyblue", color = "black") +
-    #geom_boxplot(width = 0.1, fill = "white", color = "black", outlier.shape = NA) + # Add boxplots for visualizing quartiles and outliers
-    theme_minimal() +
-    labs(title = "Distribution of Biomass Variables",
-         x = "Variable",
-         y = "Biomass Value")
-
-## or
-
-# Reshape the dataframe using gather()
-biomass_df_long <- biomass_df_subset %>%
-    gather(key = "variable", value = "value")
-
-# Create the plot
-ggplot(biomass_df_long, aes(x = variable, y = value)) +
-    geom_violin() +
-    geom_boxplot(width = 0.1, fill = "white") +
-    labs(x = "Variable", y = "Value") +
-    theme_minimal()
-
-###################
-
-
-
-##########
-
-library(stats)
-library(FSA)
-
-# Kruskal-Wallis test
-kruskal_results <- kruskal.test(value ~ variable, data = biomass.molten)
-
-# Dunn's test with Bonferroni correction for pairwise comparisons
-dunn_results <- dunnTest(value ~ variable, data = biomass.molten, method = "bonferroni")
-
-
-# Print Kruskal-Wallis test results
-print(kruskal_results)
-
-# Print Dunn's test results
-print(dunn_results)
-
-# Extract pairwise comparison results from Dunn's test
-pairwise_results <- dunn_results$res
-
-# Create a grouped bar plot
-ggplot(pairwise_results, aes(x = Comparison, y = Z, fill = P.adj < 0.05)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    geom_text(aes(label = ifelse(P.adj < 0.05, "Significant", "")),
-              vjust = -0.5, position = position_dodge(width = 0.9)) +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(title = "Pairwise Dunn Test Comparisons",
-         x = "Comparison",
-         y = "Z Value") +
-    scale_fill_manual(values = c("TRUE" = "red", "FALSE" = "grey"),
-                      guide = FALSE)
-
-
-
-
-
-
-
-
-# Plot pairwise comparisons
-ggplot(pairwise_results, aes(x = Comparison, y = P.adj)) +
-    geom_bar(stat = "identity", fill = "skyblue", width = 0.5) +
-    coord_flip() +
-    labs(title = "Pairwise Comparisons",
-         x = "Comparison",
-         y = "Adjusted p-value") +
-    theme_minimal()
-
-
-
-library(ggplot2)
-library(rcompanion)
-
-# Perform Dunn's test
-dunn_test <- dunnTest(biomass.molten$value, biomass.molten$variable, method = "bonferroni")
-
-
-# Create a data frame for plotting
-plot_data <- data.frame(
-    comparison = dunn_test$res[1],
-    z = dunn_test$res[2],
-    p.value = dunn_test$res[4]
-)
-
-# Create the plot
-ggplot(plot_data, aes(x = Comparison, y = Z)) +
-    geom_bar(stat = "identity", fill = "steelblue") +
-    geom_text(aes(label = sprintf("p = %.3f", P.adj)), vjust = -0.5, size = 3) +
-    coord_flip() +
-    labs(
-        title = "Dunn's Test for Pairwise Comparisons",
-        x = "Comparison",
-        y = "Z-score"
-    ) +
-    theme_minimal() +
-    theme(axis.text.y = element_text(size = 8))
-
-######
-
-
-dunn_pvals <- dunn_test$res[, "P.adj"]
-
-assign_letter <- function(pval.matrix) {
-    # Set a significance threshold (e.g., 0.05)
-    alpha <- 0.05
-
-    # Initialize an empty vector for letters
-    letters <- rep(NA, nrow(pval.matrix))
-
-    # Loop through rows (each comparison)
-    for (i in 1:nrow(pval.matrix)) {
-        # Find non-significant comparisons (p-value > alpha)
-        if (all(pval.matrix[i, ] > alpha)) {
-            # Assign same letter for non-significant comparisons
-            letters[i] <- letters[which.max(letters)]
-        } else {
-            # Assign a new letter for significant comparisons
-            letters[i] <- paste0("A", length(unique(letters)) + 1)
-        }
-    }
-    return(letters)
-}
-
-
-# Assuming 'variable' is the column for scenario names
-biomass.molten.2 <- biomass.molten %>%
-    left_join(data.frame(variable = unique(biomass.molten$variable), pval = dunn_pvals), by = "variable") %>%
-    mutate(letter_group = assign_letter(pval))
-
-
-
-######
-
-biomass.test <- kruskal.test(value ~ variable, data = biomass.molten)
-
-
-#####
-
-# Calculate means for each level of the variable factor
-mean_values <- biomass.molten %>%
-    group_by(variable) %>%
-    summarise(mean_value = mean(value))
-
-# Perform pairwise comparisons using the Wilcoxon rank sum test
-pairwise_results <- pairwise.wilcox.test(biomass.molten$value, biomass.molten$variable, p.adjust.method = "bonferroni")
-
-# Extract adjusted p-values from pairwise comparison results
-p_adj <- pairwise_results$P.adj
-
-significance <- ifelse(p_adj < 0.05, "*", "")
-
-# Create a data frame for plotting
-plot_data <- data.frame(variable = unique(biomass.molten$variable),
-                        mean_value = mean_values$mean_value,
-                        significance = significance)
-
-# Plot means with error bars and significance indicators
-ggplot(plot_data, aes(x = variable, y = mean_value)) +
-    geom_bar(stat = "identity", fill = "skyblue") +
-    geom_errorbar(stat = "identity", aes(ymin = mean_value - sd(value), ymax = mean_value + sd(value)), width = 0.2) +
-    geom_text(aes(label = significance), vjust = -0.5, size = 6) +
-    labs(title = "Mean Biomass by Planting Scenario",
-         x = "Planting Scenario",
-         y = "Mean Biomass") +
-    theme_minimal()
-
-
-
-
-
-
-
-# Combine mean values with adjusted p-values
-pairwise_comparison_data <- cbind(mean_values, p_adj)
-
-# Plot means with error bars and significance letters
-ggplot(pairwise_comparison_data, aes(x = variable, y = mean_value)) +
-    geom_bar(stat = "identity", fill = "skyblue") +
-    geom_errorbar(stat = "identity", aes(ymin = mean_value - sd(value), ymax = mean_value + sd(value)), width = 0.2) +
-    geom_text(aes(label = ifelse(p_adj < 0.05, "*", "")), vjust = -0.5, size = 6) +
-    labs(title = "Mean Biomass by Planting Scenario",
-         x = "Planting Scenario",
-         y = "Mean Biomass") +
-    theme_minimal()
-
-
 ############################################################################
 
-
+# DO IT IN A LOOP
 # Define the study areas and scenarios
 #study_areas <- c("U_13N", "M_9S", "M_18S", "U_18S")
 # U_13N = different!
-study_areas <- c("M_9S", "M_18S", "U_18S")
+study_areas <- c("M_9S", "M_18S", "U_18S", "M_11S", "U_15S")
+study_areas <- c("U_13N")
 scenarios <- c("S1", "S2", "S3")
 
 # Loop through each study area and scenario
 for (study_area in study_areas) {
     for (scenario in scenarios) {
+
+        output_file <- paste0("D:/BP_Layers/analysis/paper_2/", study_area, "_", scenario, ".csv")
+        if (!file.exists(output_file)) {
         # Load the masks
         Sh_mask <- rast(paste0("D:/BP_Layers/", study_area, "/landcover/Sh_90m.tif"))
 
         # Load in the stem and foliage values at 2080 for each scenario
-        dec.ws <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/ws.flt"))
-        dec.wf <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/wf.flt"))
+       # dec.ws <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/ws.flt"))
+        # dec.wf <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/wf.flt"))
+
+        dec.ws <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/ws208007.flt")) # U_13N
+        dec.wf <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/wf208007.flt")) # U_13N
 
         # Calculate agb for each scenario in 2080
         dec1 <- dec.ws + dec.wf
         crs(dec1) <- crs(Sh_mask)
         dec1_mask <- terra::mask(dec1, Sh_mask)
 
-        #con.ws <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/ws208007.flt")) # U_13N
-        #con.wf <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/wf208007.flt")) # U_13N
+        con.ws <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/ws208007.flt")) # U_13N
+        con.wf <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/wf208007.flt")) # U_13N
 
-        con.ws <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/ws.flt"))
-        con.wf <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/wf.flt"))
+        #con.ws <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/ws.flt"))
+        #con.wf <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/wf.flt"))
 
         con1 <- con.ws + con.wf
         crs(con1) <- crs(Sh_mask)
@@ -377,11 +186,11 @@ for (study_area in study_areas) {
         names(test) <- c("conif", "decid", "wetness", "random")
 
         # Create the new column
-        test$scen3 <- ifelse(test$wetness > 0.67, test$decid,
-                             ifelse(test$wetness < 0.33, test$conif,
+        test$mix <- ifelse(test$wetness > 0.67, test$conif,
+                             ifelse(test$wetness < 0.33, test$decid,
                                     test$random))
         # Create the new columns
-        test$scen2 <- ifelse(test$wetness > 0.67, test$decid, test$conif)
+        #test$scen2 <- ifelse(test$wetness > 0.67, test$decid, test$conif)
         #test$scenario3 <- ifelse(test$wetness > 0.5, test$decid, test$conif)
 
         # Add scenario and study area columns
@@ -395,8 +204,45 @@ for (study_area in study_areas) {
 
         # Print a message to notify when the CSV file has been written
         print(paste0("CSV file written: ", output_file))
+        } else {
+            # Optional: Print a message if the file already exists
+            print(paste0("Skipping existing file: ", output_file))
+        }
     }
 }
+
+
+##################################
+u18S.s3 <- read.csv("D:/BP_Layers/analysis/paper_2/U_18S_S3.csv")
+
+rast.conif <- rast("D:/BP_Layers/U_18S/landcover/Sh_90m.tif")
+rast.decid <- rast("D:/BP_Layers/U_18S/landcover/Sh_90m.tif")
+rast.mix <- rast("D:/BP_Layers/U_18S/landcover/Sh_90m.tif")
+# rast.s1 <- mask
+
+# values(rast.s1)[!is.na(values(rast.s1))] <- update.value[!is.na(values(rast.s1))]
+rast.conif[!is.na(rast.conif)] <- u18S.s3$conif
+rast.decid[!is.na(rast.decid)] <- u18S.s3$decid
+rast.mix[!is.na(rast.mix)] <- u18S.s3$mix
+
+names(rast.conif) <- "conif"
+names(rast.decid) <- "decid"
+names(rast.mix) <- "mix"
+
+# Set the consistent scale limits
+min_val <- 150
+max_val <- 500
+
+par(mfrow=c(1,3))
+plot(rast.conif, main = names(rast.conif), range=c(min_val, max_val))
+plot(rast.mix,main = names(rast.mix),range=c(min_val, max_val))
+plot(rast.decid, main = names(rast.decid), range=c(min_val, max_val))
+
+par(mfrow=c(1,1))
+
+writeRaster(rast.conif,"D:/BP_Layers/U_18S/analysis/paper_2/conif_s3.tif")
+writeRaster(rast.decid,"D:/BP_Layers/U_18S/analysis/paper_2/decid_s3.tif")
+writeRaster(rast.mix,"D:/BP_Layers/U_18S/analysis/paper_2/mix_s3.tif")
 
 ##################################
 
@@ -404,11 +250,13 @@ scenarios <- c("S1", "S2", "S3")
 
 for (scenario in scenarios) {
     file_paths <- list.files("D:/BP_Layers/analysis/paper_2/", pattern = paste0("_", scenario, ".csv"), full.names = TRUE)
-
     if (length(file_paths) > 0) {
+        # Combine data frames using lapply and rbind
         combined_df <- do.call(rbind, lapply(file_paths, read.csv))
-        output_file <- paste0("D:/BP_Layers/analysis/paper_2/combined_", scenario, ".csv")
-        write.csv(combined_df, output_file, row.names = FALSE)
+                # Define output Parquet file path
+        output_file <- paste0("D:/BP_Layers/analysis/paper_2/combined_", scenario, ".parquet")
+                # Write the combined data frame as Parquet file
+        write_parquet(combined_df, output_file)
         print(paste0("Combined dataframe written to: ", output_file))
     } else {
         print(paste0("No files found for scenario: ", scenario))
@@ -418,9 +266,9 @@ for (scenario in scenarios) {
 ##############
 
 ## read in combined dataframes
-df.s1 <- read.csv("D:/BP_Layers/analysis/paper_2/combined_S1.csv")
-df.s2 <- read.csv("D:/BP_Layers/analysis/paper_2/combined_S2.csv")
-df.s3 <- read.csv("D:/BP_Layers/analysis/paper_2/combined_S3.csv")
+df.s1 <- read_parquet("D:/BP_Layers/analysis/paper_2/combined_S1.parquet")
+df.s2 <- read_parquet("D:/BP_Layers/analysis/paper_2/combined_S2.parquet")
+df.s3 <- read_parquet("D:/BP_Layers/analysis/paper_2/combined_S3.parquet")
 
 df.all <- rbind(df.s1, df.s2)
 df.all <- rbind(df.all, df.s3)
@@ -432,15 +280,6 @@ ggplot(df.all, aes(x = clim_scen, y = conif)) +
          y = "conif Biomass")
 
 
-kruskal_conif <- kruskal.test(conif ~ clim_scen, data = df.all)
-library(FSA)
-
-dunn_conif <- dunnTest(conif ~ clim_scen, data = df.all, method = "bonferroni")
-
-library(ggplot2)
-library(ggridges)
-library(viridis)
-
 
 ggplot(df.all, aes(x = conif, color = clim_scen, fill = clim_scen, y = clim_scen)) +
     geom_density_ridges(alpha = 0.5) +
@@ -451,8 +290,7 @@ ggplot(df.all, aes(x = conif, color = clim_scen, fill = clim_scen, y = clim_scen
     theme_bw()
 
 
-library(ggridges)
-library(dplyr)
+
 
 # Filter the data for climate scenario S1
 df_s1 <- df.all %>% filter(clim_scen == "S1")
@@ -471,19 +309,14 @@ ggplot(df_s1, aes(x = biomass_value, y = biomass_type, fill = biomass_type)) +
 
 
 ####################
-library(ggridges)
-library(dplyr)
-library(tidyr)
-library(viridis)
-library(gridExtra)
 
 # Create a new data frame with only the necessary columns
 df_biomass <- df.all %>%
-    select(conif, decid, scen2, clim_scen)
+    select(conif, decid, mix, clim_scen)
 
 # Pivot the data to a long format
 df_long <- df_biomass %>%
-    pivot_longer(cols = c(conif, decid, scen2), names_to = "biomass_type", values_to = "biomass_value")
+    pivot_longer(cols = c(conif, decid, mix), names_to = "biomass_type", values_to = "biomass_value")
 
 
 # Plots with ridgelines for climate scenarios, separated by biomass type
@@ -501,7 +334,7 @@ p2 <- ggplot(df_biomass, aes(x = decid, y = clim_scen, fill = clim_scen)) +
     scale_fill_viridis(discrete = TRUE) +
     theme_bw()
 
-p3 <- ggplot(df_biomass, aes(x = scen2, y = clim_scen, fill = clim_scen)) +
+p3 <- ggplot(df_biomass, aes(x = mix, y = clim_scen, fill = clim_scen)) +
     geom_density_ridges(alpha = 0.5) +
     labs(title = "Distribution of Scen2 Biomass Across Climate Scenarios",
          x = "Scen2 Biomass", y = "Density") +
@@ -542,47 +375,9 @@ combined_plot <- grid.arrange(p1, p4, p2, p5, p3, p6, ncol = 2)
 # Print the combined plot
 print(combined_plot)
 
-
-
-# Create a single faceted plot
-faceted_plot_1 <- ggplot(df_long, aes(x = biomass_value, y = clim_scen, fill = clim_scen)) +
-    geom_density_ridges(alpha = 0.5) +
-    facet_wrap(~biomass_type, ncol = 1, scales = "free_x") +
-    labs(title = "Distribution of Biomass Values Across Climate Scenarios",
-         x = "Biomass Value", y = "Density") +
-    scale_fill_viridis(discrete = TRUE) +
-    theme_bw()
-
-# Create a single faceted plot for the second set of plots
-faceted_plot_2 <- ggplot(df_long, aes(x = biomass_value, y = biomass_type, fill = biomass_type)) +
-    geom_density_ridges(alpha = 0.5) +
-    facet_wrap(~clim_scen, ncol = 1, scales = "free_x") +
-    labs(title = "Distribution of Biomass Values by Climate Scenario",
-         x = "Biomass Value", y = "Density") +
-    scale_fill_viridis(discrete = TRUE, option = "magma") +
-    theme_bw()
-
-# Arrange the faceted plots side by side
-combined_plot <- grid.arrange(faceted_plot_1, faceted_plot_2, ncol = 2)
-
-# Print the combined plot
-print(combined_plot)
-
-
 ################################
 
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(viridis)
 
-# Create a new data frame with only the necessary columns
-df_biomass <- df.all %>%
-    select(conif, decid, scen2, clim_scen)
-
-# Pivot the data to a long format
-df_long <- df_biomass %>%
-    pivot_longer(cols = c(conif, decid, scen2), names_to = "biomass_type", values_to = "biomass_value")
 
 # Plots with separate panels for each biomass type, with fixed x-axis
 faceted_plot_1 <- ggplot(df_long, aes(x = biomass_value, y = clim_scen, fill = clim_scen)) +
@@ -591,7 +386,7 @@ faceted_plot_1 <- ggplot(df_long, aes(x = biomass_value, y = clim_scen, fill = c
     labs(title = "Distribution of Biomass Values Across Climate Scenarios",
          x = "Biomass Value", y = "Density") +
     scale_fill_viridis(discrete = TRUE) +
-    theme_bw()
+    theme_cwm() #theme_bw()
 
 # Plots with separate panels for each climate scenario, with fixed x-axis
 faceted_plot_2 <- ggplot(df_long, aes(x = biomass_value, y = biomass_type, fill = biomass_type)) +
@@ -600,11 +395,81 @@ faceted_plot_2 <- ggplot(df_long, aes(x = biomass_value, y = biomass_type, fill 
     labs(title = "Distribution of Biomass Values by Climate Scenario",
          x = "Biomass Value", y = "Density") +
     scale_fill_viridis(discrete = TRUE, option = "magma") +
-    theme_bw()
+    theme_cwm() #theme_bw()
 
 
 # Arrange the faceted plots side by side
 combined_plot <- grid.arrange(faceted_plot_1, faceted_plot_2, ncol = 2)
-
 # Print the combined plot
 print(combined_plot)
+
+###
+# problem with theme_cwm
+
+# Export the combined plot to a PDF (optional)
+ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_test2.pdf", combined_plot, width = 8.5, height = 11, units = "in", device = cairo_pdf)
+
+# Summarize statistics by clim_scen
+summary_df <- df_biomass %>%
+    group_by(clim_scen) %>%
+    summarise(
+        conif_mean = mean(conif, na.rm = TRUE),
+        conif_median = median(conif, na.rm = TRUE),
+        conif_min = min(conif, na.rm = TRUE),
+        conif_max = max(conif, na.rm = TRUE),
+        conif_sd = sd(conif, na.rm = TRUE),
+        decid_mean = mean(decid, na.rm = TRUE),
+        decid_median = median(decid, na.rm = TRUE),
+        decid_min = min(decid, na.rm = TRUE),
+        decid_max = max(decid, na.rm = TRUE),
+        decid_sd = sd(decid, na.rm = TRUE),
+        mix_mean = mean(mix, na.rm = TRUE),
+        mix_median = median(mix, na.rm = TRUE),
+        mix_min = min(mix, na.rm = TRUE),
+        mix_max = max(mix, na.rm = TRUE),
+        mix_sd = sd(mix, na.rm = TRUE)
+    )
+
+# View the summary data frame
+print(summary_df)
+
+summary_df_transposed <- t(summary_df)
+
+
+
+
+write.csv(summary_df, "D:/BP_Layers/analysis/paper_2/summary_df.csv")
+
+########################################################################
+
+
+df_biomass$clim_scen <- as.factor(df_biomass$clim_scen)
+
+kruskal_conif <- kruskal.test(conif ~ clim_scen, data = df_biomass)
+kruskal_decid <- kruskal.test(decid ~ clim_scen, data = df_biomass)
+kruskal_mix <- kruskal.test(mix ~ clim_scen, data = df_biomass)
+
+
+# Subset the data
+subset_data <- df_biomass[sample(nrow(df_biomass), 1000000), ]
+
+
+tic();dunn_conif <- dunnTest(conif ~ clim_scen, data = subset_data, method = "bonferroni");toc()
+tic();dunn_decid <- dunnTest(decid ~ clim_scen, data = subset_data, method = "bonferroni");toc()
+tic();dunn_mix <- dunnTest(mix ~ clim_scen, data = subset_data, method = "bonferroni");toc()
+
+subset_data2 <- df_long[sample(nrow(df_long), 1000000), ]
+
+kruskal_S1 <- kruskal.test(biomass_value ~ biomass_type, data = subset(subset_data2, clim_scen == "S1"))
+dunn_S1 <- dunnTest(biomass_value ~ biomass_type, data = subset(subset_data2, clim_scen == "S1"), method = "bonferroni")
+
+kruskal_S2 <- kruskal.test(biomass_value ~ biomass_type, data = subset(subset_data2, clim_scen == "S2"))
+dunn_S2 <- dunnTest(biomass_value ~ biomass_type, data = subset(subset_data2, clim_scen == "S2"), method = "bonferroni")
+
+kruskal_S3 <- kruskal.test(biomass_value ~ biomass_type, data = subset(subset_data2, clim_scen == "S3"))
+dunn_S3 <- dunnTest(biomass_value ~ biomass_type, data = subset(subset_data2, clim_scen == "S3"), method = "bonferroni")
+
+
+###################################
+
+
