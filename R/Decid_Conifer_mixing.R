@@ -116,7 +116,10 @@ test$scen3 <- ifelse(test$wetness > 0.67, test$decid,
                                  test$random))
 # Create the new columns
 test$scen2 <- ifelse(test$wetness > 0.67, test$decid, test$conif)
-#test$scenario3 <- ifelse(test$wetness > 0.5, test$decid, test$conif)
+
+test$mix <- ifelse(test$wetness > 0.67, test$conif,
+                    ifelse(test$wetness < 0.33, test$decid,
+                           test$random))
 
 ############################################################################
 
@@ -138,11 +141,11 @@ for (study_area in study_areas) {
         Sh_mask <- rast(paste0("D:/BP_Layers/", study_area, "/landcover/Sh_90m.tif"))
 
         # Load in the stem and foliage values at 2080 for each scenario
-       # dec.ws <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/ws.flt"))
+        # dec.ws <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/ws.flt"))
         # dec.wf <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/wf.flt"))
 
-        dec.ws <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/ws208007.flt")) # U_13N
-        dec.wf <- rast(paste0("D:/BP_Layers/", study_area, "/biomass_3PG/", scenario, "/Y4_output/wf208007.flt")) # U_13N
+        dec.ws <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/ws208007.flt")) # U_13N
+        dec.wf <- rast(paste0("I:/data_2024_05_02_deciduous/", study_area, "/", scenario, "_dec/Y4_output/wf208007.flt")) # U_13N
 
         # Calculate agb for each scenario in 2080
         dec1 <- dec.ws + dec.wf
@@ -213,6 +216,7 @@ for (study_area in study_areas) {
 
 
 ##################################
+# This is just an example of what things might look like if we want to plot
 u18S.s3 <- read.csv("D:/BP_Layers/analysis/paper_2/U_18S_S3.csv")
 
 rast.conif <- rast("D:/BP_Layers/U_18S/landcover/Sh_90m.tif")
@@ -273,6 +277,7 @@ df.s3 <- read_parquet("D:/BP_Layers/analysis/paper_2/combined_S3.parquet")
 df.all <- rbind(df.s1, df.s2)
 df.all <- rbind(df.all, df.s3)
 
+# quick box plot to look at coniferous
 ggplot(df.all, aes(x = clim_scen, y = conif)) +
     geom_boxplot() +
     labs(title = "Comparison of conif Biomass Across Climate Scenarios",
@@ -407,7 +412,7 @@ print(combined_plot)
 # problem with theme_cwm
 
 # Export the combined plot to a PDF (optional)
-ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_test2.pdf", combined_plot, width = 8.5, height = 11, units = "in", device = cairo_pdf)
+ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_test2_new.pdf", combined_plot, width = 8.5, height = 11, units = "in", device = cairo_pdf)
 
 # Summarize statistics by clim_scen
 summary_df <- df_biomass %>%
@@ -471,5 +476,117 @@ dunn_S3 <- dunnTest(biomass_value ~ biomass_type, data = subset(subset_data2, cl
 
 
 ###################################
+# Looking at NORTH vs SOUTH
 
+df.loc <- df.all
+df.loc$clim_scen <- as.factor(df.loc$clim_scen)
+df.loc$study_area <- as.factor(df.loc$study_area)
+# Extract the first letter from the study_area column
+df.loc$managed <- substr(df.loc$study_area, 1, 1)
+df.loc$managed <- as.factor(df.loc$managed)
+
+
+
+
+kruskal.test(conif ~ managed, data = subset(df.loc, clim_scen == "S1"))
+
+
+df_long.loc <- df.loc %>%
+    pivot_longer(cols = c(conif, decid, mix),
+                 names_to = "biomass_type",
+                 values_to = "biomass_value")
+
+####
+
+
+#############
+
+# Filter the data for 'conif' only
+df_conif <- df.loc %>%
+    select(conif, clim_scen, managed)
+# Convert to long format
+df_conif_long <- df_conif %>%
+    pivot_longer(cols = conif, names_to = "biomass_type", values_to = "biomass_value")
+
+
+# Filter the data for 'decid' only
+df_decid <- df.loc %>%
+    select(decid, clim_scen, managed)
+# Convert to long format
+df_decid_long <- df_decid %>%
+    pivot_longer(cols = decid, names_to = "biomass_type", values_to = "biomass_value")
+
+# Filter the data for 'mix' only
+df_mix <- df.loc %>%
+    select(mix, clim_scen, managed)
+# Convert to long format
+df_mix_long <- df_mix %>%
+    pivot_longer(cols = mix, names_to = "biomass_type", values_to = "biomass_value")
+
+
+
+ggplot(df_decid_long, aes(x = biomass_value, y = managed, fill = managed)) +
+    geom_density_ridges(alpha = 0.5) +
+    facet_wrap(~clim_scen, scales = "free_y", ncol = 1) +
+    labs(title = "Distribution of Biomass Values by Climate Scenario",
+         x = "Biomass Value", y = "Density") +
+    scale_fill_viridis(discrete = TRUE, option = "magma") +
+    theme_cwm() #theme_bw()
+
+
+
+# What if we look at it by study area???
+# Filter the data for 'decid' only
+df_decid_study <- df.loc %>%
+    select(decid, clim_scen, study_area)
+# Convert to long format
+df_decid__study_long <- df_decid_study %>%
+    pivot_longer(cols = decid, names_to = "biomass_type", values_to = "biomass_value")
+
+
+# Create the ridgeplot
+
+ggplot(df_decid__study_long, aes(x = biomass_value, y = study_area, fill = study_area)) +
+    geom_density_ridges(alpha = 0.5) +
+    facet_wrap(~clim_scen, scales = "free_y", ncol = 1) +
+    labs(title = "Distribution of Biomass Values by Climate Scenario",
+         x = "Biomass Value", y = "Density") +
+    scale_fill_viridis(discrete = TRUE, option = "magma") +
+    theme_cwm() #theme_bw()
+
+
+##################
+# I want to compare the biomass values for 1 climate scenario, facet wrap the study areas?
+
+df_long.loc_S1 <- df_long.loc %>% subset(clim_scen == 'S1')
+
+
+ggplot(df_long.loc_S1, aes(x = biomass_value, y = biomass_type, fill = biomass_type)) +
+    geom_density_ridges(alpha = 0.5) +
+    facet_wrap(~study_area, scales = "free_y", ncol = 1) +
+    labs(title = "Distribution of Biomass Values by Climate Scenario",
+         x = "Biomass Value", y = "Density") +
+    scale_fill_viridis(discrete = TRUE, option = "magma") +
+    theme_cwm() #theme_bw()
+
+#################
+
+means_management <- df_long.loc %>%
+    group_by(biomass_type, managed, clim_scen) %>%
+    summarise(mean_value = mean(biomass_value, na.rm = TRUE))
+
+print(means_management)
+#########
+
+means_study <- df_long.loc %>%
+    group_by(biomass_type, study_area, clim_scen) %>%
+    summarise(mean_value = mean(biomass_value, na.rm = TRUE))
+
+print(means_study)
+
+
+
+# Filter data for 'conif' biomass type
+df_filtered <- df_long.loc %>%
+    filter(biomass_type == "conif")  # Select rows where biomass_type is "conif"
 
