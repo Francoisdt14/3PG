@@ -525,14 +525,16 @@ df_mix_long <- df_mix %>%
 
 
 
-ggplot(df_decid_long, aes(x = biomass_value, y = managed, fill = managed)) +
+management_plot <- ggplot(df_conif_long, aes(x = biomass_value, y = managed, fill = managed)) +
     geom_density_ridges(alpha = 0.5) +
     facet_wrap(~clim_scen, scales = "free_y", ncol = 1) +
     labs(title = "Distribution of Biomass Values by Climate Scenario",
          x = "Biomass Value", y = "Density") +
     scale_fill_viridis(discrete = TRUE, option = "magma") +
-    theme_cwm() #theme_bw()
+    theme_cwm() + #theme_bw()
+    xlim(50, 600)  # Set x-axis limits from 50 to 600
 
+#ggsave("G:/Sync/PostDoc/Figures/Paper_2/management_decid_2.pdf", management_plot, width = 8.5, height = 11, units = "in", device = cairo_pdf)
 
 
 # What if we look at it by study area???
@@ -558,16 +560,21 @@ ggplot(df_decid__study_long, aes(x = biomass_value, y = study_area, fill = study
 ##################
 # I want to compare the biomass values for 1 climate scenario, facet wrap the study areas?
 
-df_long.loc_S1 <- df_long.loc %>% subset(clim_scen == 'S1')
+#df_long.loc_S2 <- df_long.loc %>% subset(clim_scen == 'S2')
 
+df_long.loc_S2 <- df_long.loc %>%
+    filter(clim_scen == 'S2' & biomass_type %in% c('conif', 'decid'))
 
-ggplot(df_long.loc_S1, aes(x = biomass_value, y = biomass_type, fill = biomass_type)) +
+clim2_plot <- ggplot(df_long.loc_S2, aes(x = biomass_value, y = biomass_type, fill = biomass_type)) +
     geom_density_ridges(alpha = 0.5) +
     facet_wrap(~study_area, scales = "free_y", ncol = 1) +
     labs(title = "Distribution of Biomass Values by Climate Scenario",
          x = "Biomass Value", y = "Density") +
     scale_fill_viridis(discrete = TRUE, option = "magma") +
     theme_cwm() #theme_bw()
+
+#ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_S2.pdf", clim2_plot, width = 8.5, height = 11, units = "in", device = cairo_pdf)
+
 
 #################
 
@@ -589,4 +596,56 @@ print(means_study)
 # Filter data for 'conif' biomass type
 df_filtered <- df_long.loc %>%
     filter(biomass_type == "conif")  # Select rows where biomass_type is "conif"
+
+#############################################
+
+
+# Calculate mean biomass value for each level of study_area
+mean_biomass <- df_decid__study_long %>%
+    group_by(study_area) %>%
+    summarize(mean_biomass = mean(biomass_value, na.rm = TRUE))
+
+# Reorder study_area factor levels based on mean biomass value
+df_decid__study_long$study_area <- factor(df_decid__study_long$study_area, levels = mean_biomass$study_area[order(mean_biomass$mean_biomass)])
+
+# Create the ggplot with reordered study_area levels
+decid_plot <- ggplot(df_decid__study_long, aes(x = biomass_value, y = study_area, fill = study_area)) +
+    geom_density_ridges(alpha = 0.5) +
+    facet_wrap(~clim_scen, scales = "free_y", ncol = 1) +
+    labs(title = "Distribution of Biomass Values by Climate Scenario",
+         x = "Biomass Value", y = "Density") +
+    scale_fill_viridis(discrete = TRUE, option = "magma") +
+    theme_cwm() + #theme_bw()
+    xlim(50, 550)  # Set x-axis limits from 50 to 600
+
+#ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_decid3.pdf", decid_plot, width = 7, height = 11, units = "in", device = cairo_pdf)
+
+############################################################
+# Filter the data for 'decid' only
+df_conif_study <- df.loc %>%
+    select(conif, clim_scen, study_area)
+# Convert to long format
+df_conif_study_long <- df_conif_study %>%
+    pivot_longer(cols = conif, names_to = "biomass_type", values_to = "biomass_value")
+
+# Calculate mean biomass value for each level of study_area
+mean_biomass <- df_conif_study_long %>%
+    group_by(study_area) %>%
+    summarize(mean_biomass = mean(biomass_value, na.rm = TRUE))
+
+# Reorder study_area factor levels based on mean biomass value
+df_conif_study_long$study_area <- factor(df_conif_study_long$study_area, levels = mean_biomass$study_area[order(mean_biomass$mean_biomass)])
+
+# Create the ggplot with reordered study_area levels
+conif_plot <- ggplot(df_conif_study_long, aes(x = biomass_value, y = study_area, fill = study_area)) +
+    geom_density_ridges(alpha = 0.5) +
+    facet_wrap(~clim_scen, scales = "free_y", ncol = 1) +
+    labs(title = "Distribution of Biomass Values by Climate Scenario",
+         x = "Biomass Value", y = "Density") +
+    scale_fill_viridis(discrete = TRUE, option = "magma") +
+    theme_cwm()  + #theme_bw()
+    xlim(50, 550)  # Set x-axis limits from 50 to 600
+
+#ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_conif2.pdf", conif_plot, width = 7, height = 11, units = "in", device = cairo_pdf)
+
 
