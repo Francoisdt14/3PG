@@ -525,7 +525,7 @@ df_mix_long <- df_mix %>%
 
 
 
-management_plot <- ggplot(df_conif_long, aes(x = biomass_value, y = managed, fill = managed)) +
+management_plot <- ggplot(df_mix_long, aes(x = biomass_value, y = managed, fill = managed)) +
     geom_density_ridges(alpha = 0.5) +
     facet_wrap(~clim_scen, scales = "free_y", ncol = 1) +
     labs(title = "Distribution of Biomass Values by Climate Scenario",
@@ -534,7 +534,7 @@ management_plot <- ggplot(df_conif_long, aes(x = biomass_value, y = managed, fil
     theme_cwm() + #theme_bw()
     xlim(50, 600)  # Set x-axis limits from 50 to 600
 
-#ggsave("G:/Sync/PostDoc/Figures/Paper_2/management_decid_2.pdf", management_plot, width = 8.5, height = 11, units = "in", device = cairo_pdf)
+ggsave("G:/Sync/PostDoc/Figures/Paper_2/management_mix.pdf", management_plot, width = 6.5, height = 11, units = "in", device = cairo_pdf)
 
 
 # What if we look at it by study area???
@@ -618,7 +618,7 @@ decid_plot <- ggplot(df_decid__study_long, aes(x = biomass_value, y = study_area
     theme_cwm() + #theme_bw()
     xlim(50, 550)  # Set x-axis limits from 50 to 600
 
-#ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_decid3.pdf", decid_plot, width = 7, height = 11, units = "in", device = cairo_pdf)
+#ggsave("G:/Sync/PostDoc/Figures/Paper_2/ridge_plot_decid4.pdf", decid_plot, width = 7, height = 11, units = "in", device = cairo_pdf)
 
 ############################################################
 # Filter the data for 'decid' only
