@@ -88,10 +88,9 @@ head(freq_ordered2)
 library(tidyverse)
 library(readxl)
 # Currently using customized parameters (but can use parameters directly from the vignette)
-datasheet <- 'D:/Sync/PostDoc/species_tests/Spruce_Jack_Lodge_Parameters.xlsx'
+datasheet <- 'G:/Sync/PostDoc/species_tests/Spruce_Jack_Lodge_Parameters.xlsx'
 
-Comb <-  read_xlsx(datasheet, 'Comb')
-
+Comb <-  read_xlsx(datasheet, sheet = 'Comb')
 
 # Subset the dataframe to only include the Basal Area parameter
 df_subset <- subset(Comb, Parameter == "Basal Area")
@@ -102,7 +101,7 @@ p1 <- ggplot(df_subset, aes(x = Reference, y = `3-PG`, color = Species)) +
     scale_x_continuous(name = expression(paste("Reference Data (m"^"2"*" ha"^"-1"*")"))) + # use expression function to format the axis label with superscripts
     scale_y_continuous(name = expression(paste("3-PG Data (m"^"2"*" ha"^"-1"*")"))) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.7) +
-    theme(aspect.ratio = 1) + theme_classic() +
+    theme(aspect.ratio = 1) + theme_bw() +
     scale_color_manual(values = c("magenta2", "gold2", "turquoise")) +
     coord_equal()
 
@@ -112,7 +111,7 @@ p2 <- ggplot(df_subset2, aes(x = Reference, y = `3-PG`, color = Species)) +
     scale_x_continuous(name = "Reference Data (cm)") +
     scale_y_continuous(name = "3-PG Data (cm)") +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.7) +
-    theme(aspect.ratio = 1) + theme_classic() +
+    theme(aspect.ratio = 1) + theme_bw() +
     scale_color_manual(values = c("magenta2", "gold2", "turquoise")) +
     coord_equal()
 
@@ -120,7 +119,64 @@ p2 <- ggplot(df_subset2, aes(x = Reference, y = `3-PG`, color = Species)) +
 ggsave("C:/Users/fdutoit.stu/Sync/PostDoc/species_tests/basal_area.png", p1, width = 6, height = 6, dpi = 300)
 
 #######################################
+library(ggplot2)
+library(ggrepel)
+library(patchwork)
 
+# Subset the dataframe to only include the Basal Area parameter
+df_subset <- subset(Comb, Parameter == "Basal Area")
+df_subset2 <- subset(Comb, Parameter == "DBH")
+
+calculate_r_squared <- function(x, y) {
+    cor(x, y, use = "complete.obs")^2
+}
+
+r_squared_ba <- calculate_r_squared(df_subset$Reference, df_subset$`3-PG`)
+r_squared_dbh <- calculate_r_squared(df_subset2$Reference, df_subset2$`3-PG`)
+
+# Create the first plot with ggplot2
+p1 <- ggplot(df_subset, aes(x = Reference, y = `3-PG`, color = Species)) +
+    geom_point(size = 2.5) +
+    geom_text_repel(aes(label = Site), size = 3, show.legend = FALSE) +
+    scale_x_continuous(name = expression(paste("Reference Basal Area (m"^"2"*" ha"^"-1"*")")),
+                       breaks = seq(0, max(df_subset$Reference), by = 5)) +
+    scale_y_continuous(name = expression(paste("3-PG Basal Area (m"^"2"*" ha"^"-1"*")")),
+                       breaks = seq(0, max(df_subset$`3-PG`), by = 5)) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.7) +
+    annotate("text", x = Inf, y = -Inf, label = sprintf("R² = %.3f", r_squared_ba),
+             hjust = 1.1, vjust = -1, size = 4) +
+    theme_bw() +
+    theme(aspect.ratio = 1, legend.position = "bottom") +
+    scale_color_manual(values = c("magenta2", "gold2", "turquoise")) +
+    coord_equal()
+
+# Create the second plot with ggplot2
+p2 <- ggplot(df_subset2, aes(x = Reference, y = `3-PG`, color = Species)) +
+    geom_point(size = 2.5) +
+    geom_text_repel(aes(label = Site), size = 3, show.legend = FALSE) +
+    scale_x_continuous(name = "Reference DBH (cm)",
+                       breaks = seq(0, max(df_subset2$Reference), by = 2)) +
+    scale_y_continuous(name = "3-PG DBH (cm)",
+                       breaks = seq(0, max(df_subset2$`3-PG`), by = 2)) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", size = 0.7) +
+    annotate("text", x = Inf, y = -Inf, label = sprintf("R² = %.3f", r_squared_dbh),
+             hjust = 1.1, vjust = -1, size = 4) +
+    theme_bw() +
+    theme(aspect.ratio = 1, legend.position = "bottom") +
+    scale_color_manual(values = c("magenta2", "gold2", "turquoise")) +
+    coord_equal()
+
+# Combine the plots side by side
+combined_plot <- p1 + p2 + plot_layout(guides = "collect") &
+    theme(legend.position = "bottom")
+
+# Display the combined plot
+print(combined_plot)
+
+
+ggsave("G:/Sync/PostDoc/Figures/Paper_1_revisions/parameterizations_2.pdf", combined_plot, width = 11, height = 8.5, units = "in")
+
+#######################################
 # Load the ggplot2 and ggmap packages
 library(ggplot2)
 library(ggmap)
