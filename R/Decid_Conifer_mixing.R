@@ -15,7 +15,7 @@ library(FSA)
 ####
 #Custom ggplot theme
 library(extrafont)
-font_import()
+#font_import()
 loadfonts(quiet = T)
 theme_cwm <- function(){
     theme_bw() %+replace%    #replace elements we want to change
