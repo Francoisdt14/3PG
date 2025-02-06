@@ -261,7 +261,8 @@ library(ggplot2)
 # Define the function to read and sample raster data
 read_and_sample_raster <- function(scenario, year, species) {
     base_path <- ifelse(species == "deciduous",
-                        "I:/data_2024_05_02_deciduous/M_9S/biomass_3PG/",
+                        #"I:/data_2024_05_02_deciduous/M_9S/biomass_3PG/",
+                        "D:/BP_Layers/M_9S/biomass_3PG_decid/",
                         "D:/BP_Layers/M_9S/biomass_3PG/")
     raster_path <- paste0(base_path, scenario, "/year_masked_rasters/", year, ".tif")
     rast_data <- rast(raster_path)
@@ -310,4 +311,50 @@ accum_plot <- ggplot(all_data, aes(x = year, y = biomass, fill = species)) +
     coord_cartesian(ylim = quantile(all_data$biomass, c(0.01, 0.99))) # Adjust y-axis to remove extreme outliers
 
 
-ggsave("G:/Sync/PostDoc/Figures/Paper_2/biomass_accumulation.pdf", accum_plot, width = 11, height = 9, units = "in", device = cairo_pdf)
+#ggsave("G:/Sync/PostDoc/Figures/Paper_2/biomass_accumulation.pdf", accum_plot, width = 11, height = 9, units = "in", device = cairo_pdf)
+
+
+#######
+# Create the plot
+accum_plot <- ggplot(all_data, aes(x = year, y = biomass, fill = species)) +
+    geom_boxplot(position = position_dodge(width = 0.6), outlier.shape = NA) +
+    scale_fill_manual(values = c("deciduous" = "#fe9f6d", "coniferous" = "#b73779")) + # Purple and dark grey from magma color scale
+    labs(title = "Biomass Comparison: Deciduous vs Coniferous (CS2)",
+         x = "Year", y = "Biomass", fill = "Species") +
+    theme_cwm() +
+    theme(legend.position = "bottom",
+          panel.grid.minor = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1)) +
+    coord_cartesian(ylim = quantile(all_data$biomass, c(0.01, 0.99)))+
+
+    # Make vertical lines for years dashed and dark grey
+    geom_vline(xintercept=1:6 - 0.5, linetype="dashed", color="lightgrey", size=0.5) # Adjust y-axis to remove extreme outliers
+
+ggsave("G:/Sync/PostDoc/Figures/Paper_2/biomass_accumulation_update.pdf", accum_plot, width = 11, height = 9, units = "in", device = cairo_pdf)
+
+#######
+
+
+#######
+
+# Create box plots for each planting scenario across the years
+box_plot <- ggplot(data2, aes(x = factor(Year), y = Total_Biomass, fill = Planting_Condition)) +
+    geom_boxplot(position = position_dodge(width = 0.8), color = "black") +
+    labs(title = "Total Biomass by Planting Condition (Climate Scenario 2)",
+         x = "Year",
+         y = "Total Biomass") +
+    theme_minimal() +
+    scale_fill_manual(values = c("Coniferous" = "lightgreen", "Deciduous" = "lightblue", "Mixed" = "lightcoral")) +
+    theme(legend.title = element_blank()) +
+
+    # Make vertical lines for years dashed and dark grey
+    geom_vline(xintercept=1:6 - 0.5, linetype="dashed", color="darkgrey", size=1)
+
+# Display the box plot
+print(box_plot)
+
+
+
+test.rast <- rast("D:/BP_Layers/M_9S/biomass_3PG_decid/S2_dec/year_masked_rasters/2030.tif")
+plot(test.rast)
+test.rast
